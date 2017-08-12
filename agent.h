@@ -1,0 +1,189 @@
+#pragma once
+
+#include "rntype.h"
+
+#define USER_ID_MIN				4
+#define USER_ID_MAX				( 24 + 1 )			// 클라와 통신에 사용
+
+#define USER_PASSWD_MIN			4
+#define USER_PASSWD_MAX			( 16 + 1 )			// 클라와 통신에 사용
+#define USER_2ND_PASSWDMAX		( 4 + 1 )			// 클라와 통신에 사용
+
+enum PTYPE_GUEST_
+{
+	PTYPE_GUEST_LOGOUT = 0,					//
+	PTYPE_GUEST_GAMEOUT,					//
+	PTYPE_GUEST_TIME,						//
+	XXX_PTYPE_GUEST_CLIENTERROR,				//
+	PTYPE_GUEST_LOGIN,						//
+	PTYPE_GUEST_LOGIN_USERDB,				//
+	PTYPE_GUEST_CREATEACTOR,				//
+	PTYPE_GUEST_DELETEACTOR,				//
+	XXX_PTYPE_GUEST_GCASH_ADD,					//
+	PTYPE_GUEST_SELECTACTOR,				//
+	PTYPE_GUEST_SPEEDHACK,					//
+	XXX_PTYPE_GUEST_INIT_LOCATION_ACTOR,		//
+	XXX_PTYPE_GUEST_BANK_CLOSE,					//
+	XXX_PTYPE_GUEST_BANK_OPEN,					//
+	XXX_PTYPE_GUEST_MEMO_RECEIVE,				//
+	XXX_PTYPE_GUEST_MEMO_ANSWER,				//
+	XXX_PTYPE_GUEST_FAMERANK,					//
+	XXX_PTYPE_GUEST_FAMERANKER,					//
+	PTYPE_GUEST_STRONG_LOGOUT,
+	XXX_PTYPE_GUEST_OFFICIAL_ANNOUNCEMENT,
+	PTYPE_GUEST_LOGIN_TRY,					//	로그인 최초 시도 ( 아이디 & 패스워드 )
+	PTYPE_GUEST_LOGIN_SERVER_SELECT,		//	로그인 최초 시도 후 서버 선택 로그인
+	PTYPE_GUEST_LOGIN_SERVER_LIST,			//	로그인 서버 리스트 갱신
+	PTYPE_GUEST_LOGIN_KEY,					//	로그인 키로 접속 시도
+	PTYPE_GUEST_LOGIN_WAIT_INFO,			//	로그인 대기 정보
+	PTYPE_GUEST_LOGIN_WAIT_CANCEL,			//	로그인 대기 취소
+	PTYPE_GUEST_MOVE_LOGIN_SERVER,			//	로그 아웃 후 로그인 서버로 돌아감
+	PTYPE_GUEST_LOGIN_TRY_OTP,				//	로그인 최초 시도 ( 아이디 & one time password )
+	PTYPE_GUEST_FORCE_MOVE_LOGOUT,			// 강제 이동
+	PTYPE_GUEST_NPROTECT_AUTH,				// nprotect CS인증
+	XXX_PTYPE_GUEST_REST_DELETE_CHAR_TIME_MINUTES,	// 다음 캐릭터 삭제시 까지 남은 시간(분)
+	PTYPE_GEUST_CHECK_NAME,					// 캐릭터명의 중복 여부를 검사
+	PTYPE_GUEST_PCBANG_FLAG,				// 피씨방 플러그 정보
+	PTYPE_GUEST_LOGOUT_START,				// 로그아웃 시작
+	PTYPE_GUEST_LOGOUT_CANCEL,				// 로그아웃 취소
+	PTYPE_GUEST_TRANSMIGRATE_ACTOR,			// 케릭터를 다른 서버로 이전
+};
+
+enum PTYPE_BANK_
+{
+	PTYPE_BANK_LOGIN,
+	PTYPE_BANK_LOGOUT,
+	PTYPE_BANK_LOGIN_TRY,
+	PTYPE_BANK_LOGIN_SERVER_SELECT,
+	PTYPE_BANK_LOGIN_TRY_DISCONNECT,
+	PTYPE_BANK_LOGIN_KEY,
+	PTYPE_BANK_MOVE_LOGIN_SERVER,
+	PTYPE_BANK_LOGIN_TRY_OTP,
+
+	PTYPE_BANK_LOCK_USER_RESTORATION,
+	PTYPE_BANK_UNLOCK_USER_RESTORATION,
+};
+
+// login, logout 관련 에러 코드
+enum REASON_SESSION_LOGINOUT
+{
+	// 정상
+	REASON_SESSION_LOGOUT_PROXY = 0,						// 케릭터 선택창에서 로그 아웃 ( 정상 )
+	REASON_SESSION_LOGOUT_GAME,								// 게임존에서 로그 아웃 ( 정상 )
+	REASON_SESSION_LOGOUT_ADMIN,							// 운영자에 의한 종료 ( 정상 )
+	REASON_SESSION_MOVE_LOGIN_SERVER,						// 로그인 서버이동 ( 정상 )
+	REASON_SESSION_FORCE_MOVE_LOGOUT,						// 강제 이동 ( 정상 )
+	REASON_SESSION_LOGOUT_CHAT,								// 채팅 서버 로그아웃 ( 정상 )
+
+// 에러
+REASON_SESSION_LOGOUT_PROXY_TO_CONTAINER_DICONNECT = 100,// 프록시데몬과 컨테이너 데몬이 연결 끊어짐으로 로그아웃
+REASON_SESSION_PROXY_TO_CONTAINER_DICONNECT,			// 프록시데몬과 컨테이너 데몬이 연결 끊어짐
+REASON_SESSION_PROXY_TO_TRANSFER_DICONNECT,				// 프록시데몬과 트렌스퍼세션과 연결 끊어졌음
+REASON_SESSION_PROXY_TO_CLIENT_DISCONNECT,				// 프록시 데몬과 클라이언트 비정상종료
+REASON_SESSION_HCASH_TO_PROXY_DISCONNECT,				// hcash데몬과 프록시 데몬이 연결 끊어졌음
+REASON_SESSION_BANK_TO_HCASH_DISCONNECT,				// bank데몬과 HCASH데몬이 연결 끊어졌음
+REASON_SESSION_HCASH_TO_PROXY_NOT_INIT,					// 프록시데몬과 HCASH데몬이 아직 초기화가 안됨
+REASON_SESSION_OVERLAP,									// 중복사용자가 있음
+XXX_REASON_SESSION_OVERLAPPED,							// 중복사용자로 들어옴
+REASON_SESSION_HCASH_LOGIN_WAIT_OVERLAP,				// hcash대몬에 로그인 대기열이 이미 있음
+REASON_SESSION_LOGIN_KEY_LOOKUP_FAIL,					// 로그인 데몬으로 접속 하였으나 로그인 키를 못 찾음
+REASON_SESSION_DUPLICATE_CRATE_ACTOR_NAME,				// 액터 생성중 이미 같은 이름이 있음
+XXX_REASON_SESSION_ACTOR_STATUS_ERROR,						// 액터 상태 오류
+REASON_SESSION_ACTOR_ALREADY_SELECTED,					// 이미 액터 선택했음
+REASON_SESSION_ACTOR_INDEX_ERROR,						// 요청 액터 인덱스 오류
+REASON_SESSION_PACKET_TYPE_ERROR,						// 정의 되지 않은 인터페이스 처리
+REASON_SESSION_CREATE_ACTOR_JOB_INDEX_ERROR,			// 액터 생성 패킷의 잡 인덱스 오류
+REASON_SESSION_DELETE_ACTOR_INDEX_ERROR,				// 액터 삭제 패킷의 엑터 인덱스 오류
+XXX_REASON_SESSION_LOGOUT_SPEEDHACK,						// 스피드핵 발생종료
+REASON_SESSION_VERSION_ERROR,							// 실행화일 버젼 오류
+REASON_SESSION_LOGIN_TRY_MEMORY_ALLOC_ERROR,			// login try 메모리 초기화 오류
+REASON_SESSION_USER_QUERY_EXEC_ERROR,					// 유저 쿼리 실행 오류
+REASON_SESSION_USER_QUERY_EXEC_RESULT_ERROR,			// 유저 쿼리 실행결과 오류
+REASON_SESSION_LOGIN_LEVEL_ERROR,						// 사용자 레벨 오류
+REASON_SESSION_ACTOR_QUERY_EXEC_ERROR,					// 액터 쿼리 실행 오류
+REASON_SESSION_ACTOR_QUERY_EXEC_RESULT_ERROR,			// 액터 쿼리 실행결과 오류
+REASON_SESSION_ACTOR_QUERY_SEQ_CREATE_ERROR,			// 액터 생성 시퀀스 발행 오류
+REASON_SESSION_DELETE_ACTOR_NOT_FIND,					// 삭제할 액터가 없음
+REASON_SESSION_DELETE_ACTOR_STATUS_ERROR,				// 액터 삭제 상태 오류
+REASON_SESSION_FIND_ACTOR_COUNT_MAX,					// 찾은 액터가 최대치보다 많음
+REASON_SESSION_LOAD_ACTOR_ERROR,						// 액터 로드 오류
+REASON_SESSION_PROXY_LOGIN_KEY_ERROR,					// PROXY데몬에 접속요청한 클라이언트의 로그인키 오류
+REASON_SESSION_USER_ID_ERROR,							// 사용자 아이디 오류
+REASON_SESSION_USER_PASSWD_ERROR,						// 사용자 패스워드 오류
+REASON_SESSION_USERBAN,									// 유저 밴 중
+REASON_SESSION_USERLOCK,								// 유저 블럭 중
+REASON_SESSION_SERVERSELECT_LOOKUPFAIL,					// 서버 선택할때 로그인 대기 액터 못찾음
+REASON_SESSION_BANK_LOGIN_KEY_LOOKUPFAIL,				// 뱅크데몬에서 로그인 키 못찾음
+REASON_SESSION_BSESSION_MEMORY_ALLOC_ERROR,				// 유저 데이타 메모리 초기화 오류
+REASON_SESSION_NOT_FIND_BSESSION_ERROR,					// BANK데몬에서 BSESSION을 못찾음
+REASON_SESSION_LOGIN_WAIT_CANCEL_ERROR,					// 로그인 대기열 취소 오류
+REASON_SESSION_ACTOR_NAME_WORD_ERROR,					// 사용자 캐릭이름 오류
+REASON_SESSION_LOGIN_TIME_OUT,							// 로그인 대기중 TIME OUT
+REASON_SESSION_PROXY_TIME_OUT,							// 게임중 TIME OUT
+REASON_SESSION_LOGIN_IP_NOT_SAME,						// 로그인 아이피 틀림
+REASON_SESSION_CENTER_LOOKUPFAIL,						// 서비스 중인 서버 구룹을 찾을 수 없음
+REASON_SESSION_MOVE_LOGIN_SERVER_INMAP_ERROR,			// 로그인 서버로 갈려고 하나 맵에 있음
+REASON_SESSION_LOGIN_CONNECT_MAX,						// 로그인 서버 최대 접속자 수 초과
+REASON_SESSION_LOGIN_WAIT_MAX,							// 로그인 대기 인원 초과
+REASON_SESSION_LOGIN_TO_CENTER_DOWN,					// 로그인 데몬에서 해당 서버 그룹이 다운
+REASON_SESSION_NOT_FIND_CONNECT_PROXY,					// 접속할 프록시 데몬을 찾을수 없습니다.
+REASON_SESSION_SERVICE_LOCK,							// 서비스 점검중
+REASON_SESSION_SERVICE_LOCK_START,						// 서비스 점검 시작
+REASON_SESSION_CREATE_ACTOR_WEAPON_INDEX_ERROR,			// 액터 생성 패킷의 무기 선택 인덱스 오류
+REASON_SESSION_BAN_CHAR,								// 캐릭터 강종
+REASON_SESSION_LOGIN_CHAT_SERVER_ERROR,					// 채팅 서버에 접속할수 없습니다.
+REASON_SESSION_NPROTECT_MODULE_VERSION_ERROR,			// nprotect 모듈 버전 틀림
+REASON_SESSION_NPROTECT_GAMEGUARD_VERSION_ERROR,		// nprotect 게임가드 버전 틀림
+REASON_SESSION_NHN_TCOIN_STATE_ERROR,					// nhn t-coin연동 채크 상태 이상
+REASON_SESSION_NHN_TCOIN_TIME_END,						// nhn t-coin(피씨방)시간 종료
+REASON_SESSION_EVENT_EXIST_RESERVED_CHAR_NAME,			// obt event, 이미 예약된 이름
+REASON_SESSION_NOT_DELETE_CHAR_TIME,					// 캐릭터 삭제 유효 시간이 아님
+REASON_SESSION_REJECT_CREATE_CHARACTER,					// 캐릭터 삭제 유효 시간이 아님
+REASON_SESSION_USER_2ND_PASSWD_ERROR,					// 사용자 2차 패스워드 오류
+REASON_SESSION_USER_2ND_PASSWD_ERROR_MAX,				// 사용자 2차 패스워드 최대 오류 횟수 초과
+REASON_SESSION_NOT_SAME_SELECT_PROXY_ID,				// 서버가 접속하라는 프록시와 접속한 프록시가 틀림
+REASON_SESSION_NOT_SELF_CERTIFICATION,					// 본인 인증을 하지 않은 계정에 none PK 서버에 접속 시도
+REASON_SESSION_LOGOUT_KICK,								// 다른 유저가 로그인 시도로 강종됐음
+REASON_SESSION_AWAKING_SLEEP,							// 휴면 해제 처리 중
+REASON_SESSION_NOT_ACCEPT_ACCOUNT_SLEEP,				// 휴면 동의 안했음
+REASON_SESSION_FAILED_AWAKING_SLEEP,					// 휴면 해제 실패
+REASON_SESSION_FAILED_BOOSTER_EVENT_SERVER_MOVE_FAIL,	// 부스터 이벤트 서버 이전 실패
+REASON_SESSION_BOOSTER_EVENT_SERVER_MOVE_PROCESS,		// 부스터 이벤트 서버 이전중
+REASON_SESSION_BOOSTER_EVENT_SERVER_MOVE_PROCESS_LOGIN_FAIL,	// 부스터 이벤트 서버 이전중이어서 로그인 실패
+
+REASON_SESSION_SPEED_FAST = 1000,						// 팻킷 속도 체크 제한에 의해 끊김 (자세한 내용 로그 fast packet)
+														// REASON_SESSION_SPEED_FAST + error packet type
+};
+
+enum REASON_SERVER_MIGRATE
+{
+	REASON_SERVER_MIGRATE_NONE,										// 없음
+	REASON_SERVER_MIGRATE_SUCCESS = 1 << 0,		// 성공
+	REASON_SERVER_MIGRATE_NOT_FOUND_ACTOR = 1 << 1,		// 없는 캐릭터
+	REASON_SERVER_MIGRATE_ALREADY_MIGRATE_SERVER = 1 << 2,		// 이미 부스터 서버 이벤트를 마친 캐릭터
+	REASON_SERVER_MIGRATE_MAX_LEVEL_LIMIT = 1 << 3,		// 레벨 조건 > 45
+	REASON_SERVER_MIGRATE_MIN_LEVEL_LIMIT = 1 << 4,		// 레벨 조건 < 31
+	REASON_SERVER_MIGRATE_ACTOR_SLOT_MAX = 1 << 5,		// 이동할 서버 캐릭터 슬롯 맥스
+	REASON_SERVER_MIGRATE_NOT_CLEAN_MAIL = 1 << 6,		// 메일 아이템 정리 안됨
+	REASON_SERVER_MIGRATE_NOT_CLEAN_CONSIGN = 1 << 7,		// 경매 아이템 정리 안됨
+	REASON_SERVER_MIGRATE_NOT_CLEAN_SEVEN_CONSIGN = 1 << 8,		// 7혼지서 경매 아이템 정리 안됨
+	REASON_SERVER_MIGRATE_NOT_CLEAN_CONSIGN_CAL = 1 << 9,		// 경매 정산 안됨
+	REASON_SERVER_MIGRATE_NOT_CLEAN_INVEN_WEAR = 1 << 10,		// 인벤이나 장착창 정리 안됨
+	REASON_SERVER_MIGRATE_TRANSMIGRATE_STOP = 1 << 11,		// 서버 이전 일시 중지
+	REASON_SERVER_MIGRATE_MAX,
+};
+
+typedef struct tagUserDB
+{
+	tCHAR	user_id_[USER_ID_MAX];
+	tINT	user_index_;
+	tINT	level_;
+	tBOOL	is_pcbang_;
+} TUserDB;
+
+typedef struct tagBillInfo
+{
+	tCHAR	adbill_method_[2 + 1];
+	tCHAR	adbill_expire_[12 + 1];
+	tINT	adbill_remain_;
+} TBillInfo;

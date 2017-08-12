@@ -1,0 +1,190 @@
+#include "bnf.h"
+
+#include "logsystem.h"
+
+#include "listen_sessionTcp.h"
+
+#include "listen_sessionTcp.h"
+
+ListenSessionTcp::ListenSessionTcp( boost::asio::io_service& io_service, int waittimeout ) :
+	ListenSession(io_service, SessionBase::LISTEN_SESSION),
+	acceptor_( io_service ),
+	session_wait_time_( waittimeout ),
+	ref_count_( 0 )
+{
+	bnf::instance()->tcp_listen_session_seq_.pop(handle_);
+}
+
+ListenSessionTcp::~ListenSessionTcp()
+{
+	bnf::instance()->tcp_listen_session_seq_.push(handle_);
+}
+
+bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
+{
+	std::ostringstream oss;
+	oss << port;
+
+	std::string port_string = oss.str();
+
+	boost::asio::ip::tcp::resolver resolver(io_service_);
+
+	boost::asio::ip::tcp::resolver::query query(host, port_string);
+	boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
+
+	boost::system::error_code error;
+
+	acceptor_.open(endpoint.protocol(), error);
+	if (error)
+	{
+		LOG_ERROR("bnf - acceptor_.open error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
+		return false;
+	}
+
+	acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true), error);
+	if (error)
+	{
+		LOG_ERROR("bnf - acceptor_.set_option error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
+		return false;
+	}
+
+	acceptor_.bind(endpoint, error);
+	if (error)
+	{
+		LOG_ERROR("bnf - acceptor_.bind error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
+		return false;
+	}
+
+	acceptor_.listen(boost::asio::socket_base::max_connections, error);
+	if (error)
+	{
+		LOG_ERROR("bnf - acceptor_.listen error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
+		return false;
+	}
+
+	closeOnExecOn();
+
+	function_ = func;
+
+	session_handle shandle;
+	if (bnf::instance()->tcp_session_seq_.pop(shandle) == false)
+	{
+		bnf::instance()->growSessionBuffer();
+		LOG_INFO("session buffer growing.");
+	}
+
+	rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)&bnf::instance()->tcp_session_buf_[shandle];
+	pSession->Open(shandle, handle_, session_wait_time_);
+
+	IncRefCount();
+	acceptor_.async_accept(pSession->Socket(),
+			boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
+
+	LOG_INFO("bnf - open listen socket. fd: %d, handle: %d", acceptor_.native(), GetHandle());
+
+	return true;
+}
+
+void ListenSessionTcp::Close()
+{
+	io_service_.post( boost::bind( &ListenSessionTcp::HandleClose, this ) );
+}
+
+void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const boost::system::error_code& error)
+{
+	if (!error)
+	{
+		rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)pSessionService;
+
+		pSession->_getIp();
+		pSession->IncRefCount();
+
+		// event
+		function_->operate(pSession);
+
+		bnf::instance()->tcp_session_list_.insert(pSession->GetHandle(), pSession);
+		pSession->Run();
+
+		LOG_INFO("bnf [%s] - accepted. fd: %d, handle: %d", pSession->ip().c_str(), pSession->Socket().native(), pSession->GetHandle());
+
+		session_handle shandle;
+
+		while (1)
+		{
+			if (bnf::instance()->tcp_session_seq_.pop(shandle) == false)
+			{
+				bnf::instance()->growSessionBuffer();
+				LOG_INFO("session buffer growing.");
+			}
+
+			pSession = (rnSocketIOServiceTcp*)&bnf::instance()->tcp_session_buf_[shandle];
+			if (((rnSocketIOServiceTcp*)pSession)->Socket().is_open() == false)
+			{
+				break;
+			}
+
+			LOG_INFO("bnf - skip rnSocketIOService. handle: %d, fd: %d", pSession->GetHandle(), pSession->Socket().native());
+		}
+
+
+		pSession->Open(shandle, handle_, session_wait_time_);
+		acceptor_.async_accept(pSession->Socket(),
+				boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
+	}
+	else
+	{
+		LOG_ERROR("bnf - HandleAccept error. fd: %d, handle: %d, error: %s", acceptor_.native(), GetHandle(), error.message().c_str());
+		DecRefCount();
+	}
+}
+
+void ListenSessionTcp::HandleClose()
+{
+	boost::system::error_code error;
+	acceptor_.close( error );
+}
+
+void ListenSessionTcp::closeOnExecOn()
+{
+	int oldflags = fcntl (acceptor_.native(), F_GETFD, 0);
+	if ( oldflags >= 0 )
+	{
+		fcntl( acceptor_.native(), F_SETFD, oldflags | FD_CLOEXEC );
+	}
+}
+
+void ListenSessionTcp::closeOnExecOff()
+{
+	int oldflags = fcntl (acceptor_.native(), F_GETFD, 0);
+	if ( oldflags >= 0 )
+	{
+		fcntl( acceptor_.native(), F_SETFD, oldflags & ~FD_CLOEXEC );
+	}
+}
+
+void ListenSessionTcp::IncRefCount()
+{
+	boost::recursive_mutex::scoped_lock lock(ref_count_mutex_);
+	ref_count_++;
+}
+
+void ListenSessionTcp::DecRefCount()
+{
+	tBOOL delete_flag = cFALSE;
+
+	{
+		boost::recursive_mutex::scoped_lock lock(ref_count_mutex_);
+		ref_count_--;
+
+		if( 0 == ref_count_ )
+		{
+			LOG_INFO( "bnf - listen closed. fd: %d, handle: %d", acceptor_.native(), GetHandle() );
+
+			delete_flag = cTRUE;
+
+		}
+	}
+
+	if( delete_flag == cTRUE )
+		bnf::instance()->RemoveSession( GetHandle() );
+}
