@@ -3,9 +3,7 @@
 #include "MemoryPoolBase.h"
 #include "rntype.h"
 
-
 class SeedCipher;
-
 
 #define PACKET_HEADER_SIZE	(sizeof(rnPacket::Header))
 #define APPEND_PACKET_SIZE	(16)
@@ -19,125 +17,100 @@ public:
 public:
 	struct Header
 	{
-		tUINT		size_		: 16;			//data에 쓰여진 총 길이 (Header size 포함)
-		tUINT		group_		: 6;			// 패킷 그룹
-		tUINT		type_		: 10;			// 그룹별 타입분류
+		uint32_t	size	: 16;	// data에 쓰여진 총 길이 (Header size 포함)
+		uint32_t	group	: 6;	// 패킷 그룹
+		uint32_t	type	: 10;	// 그룹별 타입분류
 	};
 
 public:
-	rnPacket(tSIZE size);
+	rnPacket(size_t size);
 	rnPacket();
 	~rnPacket();
 
-	rnPacket*		copy();
-	void			copyHeader(rnPacket* base)		{ *pHeader_ = *base->pHeader_; }
+	rnPacket* copy();
+	void copyHeader(rnPacket* base) { *_header = *base->_header; }
 
-	void			reset();
+	void reset();
 
-	void			addBYTE(tBYTE v);
-	void			addBYTE(tBYTE *v, tSIZE count);
+	void addBYTE(uint8_t v);
+	void addBYTE(uint8_t *v, size_t count);
+	void addBOOL(bool v);
+	void addSINT(int16_t v);
+	void addUSINT(uint16_t v);
+	void addINT(int32_t v);
+	void addUINT(uint32_t v);
+	void addLONG(int32_t v);
+	void addULONG(uint32_t v);
+	void addFLOAT(float v);
+	void addVALUE(const uint8_t *v, size_t count);
+	template<typename T> bool addVALUE(T& v);
+	template<typename T> bool addVALUE(const T& v);
 
-	void			addBOOL(tBOOL v);
+	bool getBYTE(uint8_t &rt);
+	bool getBOOL(bool &rt);
+	bool getSINT(int16_t &rt);
+	bool getUSINT(uint16_t &rt);
+	bool getINT(int32_t &rt);
+	bool getUINT(uint32_t &rt);
+	bool getLONG(int32_t &rt);
+	bool getULONG(uint32_t &rt);
+	bool getFLOAT(float &rt);
+	bool getVALUE(uint8_t *v, int32_t count);
 
-	void			addSINT(tSINT v);
+	int32_t getGroup() { return (int32_t)_header->group; }
+	int32_t getType() { return (int32_t)_header->type; }
+	int32_t getSize() { return (int32_t)_header->size; }
+	size_t dataSize() { return (int32_t)_header->size - PACKET_HEADER_SIZE; }
 
-	void			addUSINT(tUSINT v);
+	rnPacket::Header* getHeader() { return _header; }
 
-	void			addINT(tINT v);
+	uint8_t* data() { return _data; }
 
-	void			addUINT(tUINT v);
+	uint8_t* getBuffer() { return _buffer; }
 
-	void			addLONG(tLONG v);
+	size_t dataMaxSize() { return MAX_PACKET_MESSAGE; }
 
-	void			addULONG(tULONG v);
+	void setGroup(int32_t group) { _header->group = group; }
+	void setType(int32_t type) { _header->type = type; }
+	void setGroupType(int32_t group, int32_t type) { _header->group = group; _header->type = type; }
 
-	void			addFLOAT(tFLOAT v);
+	void moveReadCount(size_t count) { _rcount += count; }
+	void setReadCount(size_t count) { _rcount = count; }
 
-	void			addVALUE(const tBYTE *v, tSIZE count);
+	void setDataSizeWithoutHeader(size_t count) { _header->size = count + PACKET_HEADER_SIZE; }
+	void setSize(size_t count) { _header->size = count; }
 
-	template<typename T>
-	tBOOL			addVALUE(T& v);
-
-	template<typename T>
-	tBOOL			addVALUE(const T& v);
-
-	tBOOL			getBYTE(tBYTE &rt);
-
-	tBOOL			getBOOL(tBOOL &rt);
-
-	tBOOL			getSINT(tSINT &rt);
-
-	tBOOL			getUSINT(tUSINT &rt);
-
-	tBOOL			getINT(tINT &rt);
-
-	tBOOL			getUINT(tUINT &rt);
-
-	tBOOL			getLONG(tLONG &rt);
-
-	tBOOL			getULONG(tULONG &rt);
-
-	tBOOL			getFLOAT(tFLOAT &rt);
-
-	tBOOL			getVALUE(tBYTE *v, tINT count);
-
-	tINT			group()										{ return (tINT)pHeader_->group_; }
-	tINT			type()										{ return (tINT)pHeader_->type_; }
-	tINT			size()										{ return (tINT)pHeader_->size_; }
-	tSIZE			dataSize()									{ return (tINT)pHeader_->size_ - PACKET_HEADER_SIZE; }
-
-	rnPacket::Header*	header()								{ return pHeader_; }
-
-	tBYTE*			data()										{ return pData_; }
-
-	tBYTE*			getBuffer()									{ return buffer_; }
-
-	tSIZE			dataMaxSize()								{ return MAX_PACKET_MESSAGE; }
-
-	void			setGroup(tINT group)						{ pHeader_->group_ = group; }
-	void			setType(tINT type)							{ pHeader_->type_ = type; }
-	void			setGroupType(tINT group, tINT type)			{ pHeader_->group_ = group; pHeader_->type_ = type; }
-
-	void			moveReadCount(tSIZE count)					{ rcount_ += count; }
-	void			setReadCount(tSIZE count)					{ rcount_ = count; }
-
-	void			setDataSizeWithoutHeader(tSIZE count)		{ pHeader_->size_ = count + PACKET_HEADER_SIZE; }
-	void			setSize(tSIZE count)						{ pHeader_->size_ = count; }
-
-	rnPacket*		compress();
-	rnPacket*		decompress();
-
-	void			dumpSimple();
-	void			dump();
+	void dumpSimple();
+	void dump();
 
 protected:
-	Header*			pHeader_;
-	tBYTE*			pData_;
-	tSIZE			rcount_;
+	Header* _header;
+	uint8_t* _data;
+	size_t _rcount;
 
-	tBYTE			buffer_[MAX_PACKET_MESSAGE];
+	uint8_t _buffer[MAX_PACKET_MESSAGE];
 };
 
 template<typename T>
-inline tBOOL rnPacket::addVALUE(T& v)
+inline bool rnPacket::addVALUE(T& v)
 {
-	if (MAX_PACKET_MESSAGE < pHeader_->size_ + sizeof(T))
-		return cFALSE;
+	if (MAX_PACKET_MESSAGE < _header->size + sizeof(T))
+		return false;
 
-	memcpy(buffer_ + pHeader_->size_, &v, sizeof(T));
-	pHeader_->size_ += sizeof(T);
+	memcpy(_buffer + _header->size, &v, sizeof(T));
+	_header->size += sizeof(T);
 
-	return cTRUE;
+	return true;
 }
 
 template<typename T>
-inline tBOOL rnPacket::addVALUE(const T& v)
+inline bool rnPacket::addVALUE(const T& v)
 {
-	if (MAX_PACKET_MESSAGE < pHeader_->size_ + sizeof(T))
-		return cFALSE;
+	if (MAX_PACKET_MESSAGE < _header->size + sizeof(T))
+		return false;
 
-	memcpy(buffer_ + pHeader_->size_, &v, sizeof(T));
-	pHeader_->size_ += sizeof(T);
+	memcpy(_buffer + _header->size, &v, sizeof(T));
+	_header->size += sizeof(T);
 
-	return cTRUE;
+	return true;
 }

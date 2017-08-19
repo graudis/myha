@@ -11,23 +11,23 @@
 
 #include "network_util.h"
 
-tBOOL getLocalIp(tCHAR* buff, tINT buff_len)
+bool getLocalIp(char* buff, int32_t buff_len)
 {
-	tCHAR host_name[256];
+	char host_name[256];
 
 	gethostname(host_name, 256);
 
 	struct hostent* hostinfo = gethostbyname(host_name);
 	if (!hostinfo)
-		return cFALSE;
+		return false;
 
 	if (!hostinfo->h_addr_list)
-		return cFALSE;
+		return false;
 
-	tCHAR** addrs = hostinfo->h_addr_list;
+	char** addrs = hostinfo->h_addr_list;
 
 	STRNCPY(buff, inet_ntoa(*(struct in_addr*)*addrs), buff_len);
-	return cTRUE;
+	return true;
 }
 
 std::string getLocalIP(std::string if_name)

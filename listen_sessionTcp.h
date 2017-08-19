@@ -33,11 +33,11 @@ private:
 	void DecRefCount();
 
 private:
-	boost::asio::ip::tcp::acceptor acceptor_;
+	boost::asio::ip::tcp::acceptor __acceptor;
 
-	int session_wait_time_;
-	rnSocketIOHandler* function_;
+	int32_t __session_wait_time;
+	rnSocketIOHandler* __function;
 
-	boost::recursive_mutex ref_count_mutex_;
-	int ref_count_;
+	boost::recursive_mutex __ref_count_mutex;
+	int32_t __ref_count;
 };

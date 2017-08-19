@@ -19,11 +19,9 @@ public:
 	void deliver(rnPacket::SP& packet);
 	void deliver(rnPacket* packet);
 
-	const tCHAR* getIp() { return service_->ip().c_str(); }
+	const char* getIp() { return __service->ip().c_str(); }
 
 private:
-	CServerSession* server_session_;
-
-	rnSocketIOService* service_;
-
+	CServerSession* __server_session;
+	rnSocketIOService* __service;
 };

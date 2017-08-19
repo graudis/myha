@@ -10,9 +10,13 @@ typedef unsigned int session_handle;
 class SessionBase
 {
 public:
-	enum { INVALID_SESSION_HANDLE = 0 };
+	enum
+	{
+		INVALID_SESSION_HANDLE = 0
+	};
 
-	enum {
+	enum
+	{
 		SESSION,
 		CONNECT_SESSION,
 		TIMER_SESSION,
@@ -21,43 +25,43 @@ public:
 	};
 
 public:
-	SessionBase(boost::asio::io_service& io_service, session_type type)	: io_service_(io_service)
+	SessionBase(boost::asio::io_service& io_service, session_type type)	: _io_service(io_service)
 	{
-		type_ = type;
-		handle_ = INVALID_SESSION_HANDLE;
-		user_data_ = NULL;
-		close_error_ = false;
+		_type = type;
+		_handle = INVALID_SESSION_HANDLE;
+		_user_data = NULL;
+		_close_error = false;
 	}
 	virtual ~SessionBase() {}
 
-	void SetType(session_type type)			{ type_ = type; }
-	session_type GetType()					{ return type_; }
+	void SetType(session_type type) { _type = type; }
+	session_type GetType() { return _type; }
 
-	void SetHandle(session_handle handle)	{ handle_ = handle; }
-	session_handle GetHandle()				{ return handle_; }
+	void SetHandle(session_handle handle) { _handle = handle; }
+	session_handle GetHandle() { return _handle; }
 
-	void SetUserData(void *data)			{ user_data_ = data; }
-	void *GetUserData()						{ return user_data_; }
+	void SetUserData(void *data) { _user_data = data; }
+	void *GetUserData() { return _user_data; }
 
-	void SetErrorMessage(std::string str)	{ error_message_ = str; }
-	std::string& GetErrorMessage()			{ return error_message_; }
+	void SetErrorMessage(std::string str) { _error_message = str; }
+	std::string& GetErrorMessage() { return _error_message; }
 
-	bool isSesseion()						{ return (type_ == SESSION); }
-	bool isListenSession()					{ return (type_ == LISTEN_SESSION); }
-	bool isTimerSession()					{ return (type_ == TIMER_SESSION); }
-	bool isConnectSession()					{ return (type_ == CONNECT_SESSION); }
+	bool isSesseion() { return (_type == SESSION); }
+	bool isListenSession() { return (_type == LISTEN_SESSION); }
+	bool isTimerSession() { return (_type == TIMER_SESSION); }
+	bool isConnectSession() { return (_type == CONNECT_SESSION); }
 
-	virtual bool isValid()					{ return (handle_ != INVALID_SESSION_HANDLE); }
+	virtual bool isValid() { return (_handle != INVALID_SESSION_HANDLE); }
 
-	bool isCloseError() { return close_error_; }
+	bool isCloseError() { return _close_error; }
 
 protected:
-	session_type				type_;
-	session_handle				handle_;
-	void*						user_data_;
+	session_type _type;
+	session_handle _handle;
+	void* _user_data;
 
-	std::string					error_message_;
+	std::string _error_message;
 
-	boost::asio::io_service&	io_service_;
-	bool						close_error_;
+	boost::asio::io_service& _io_service;
+	bool _close_error;
 };

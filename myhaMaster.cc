@@ -3,36 +3,28 @@
 #include "Config_INI.h"
 
 #include "logsystem.h"
-#include "gmapsetting.h"
 
 #include "localrequest.h"
 #include "mcenterservice.h"
-#include "mservermanager.h"
-#include "mservercmd.h"
-#include "mloginaccept.h"
-#include "connmonitorservice_accept.h"
-#include "mservercommandmanager.h"
 #include "myhaMaster.h"
 #include "network_util.h"
 
 #include "ProcessCheck.h"
 
-rnIpData			myhaMaster::ip_data_;
-// boost_signal_t		myhaMaster::signal_;
-session_handle		myhaMaster::server_command_handle_ = SessionBase::INVALID_SESSION_HANDLE;
-TimerClass			myhaMaster::timer_class_;
+session_handle		myhaMaster::server_command_handle = SessionBase::INVALID_SESSION_HANDLE;
+TimerClass			myhaMaster::timer_class;
 
 void TimerClass::operate(rnSocketIOService* service)
 {
 	myhaMaster::processTimerSession((TimerSession*)service);
 }
 
-tBOOL myhaMaster::config()
+bool myhaMaster::config()
 {
-	return cTRUE;
+	return true;
 }
 
-tBOOL myhaMaster::init()
+bool myhaMaster::init()
 {
 	bnf::instance()->Init();
 
@@ -43,20 +35,20 @@ tBOOL myhaMaster::init()
 	{
 		LOG_ERROR("Can't create listen service['%s:%d'] for center.", getServiceIP(), MONITOR_FOR_CENTER);
 		printf("[%s:%d	%s]	Can't create listen service['%s:%d'] for center.\n", __FILE__, __LINE__, __FUNCTION__,	getServiceIP(), MONITOR_FOR_CENTER);
-		return cFALSE;
+		return false;
 	}
 
-	myhaMaster::server_command_handle_ = bnf::instance()->CreateTimer(1000, &timer_class_);
+	myhaMaster::server_command_handle = bnf::instance()->CreateTimer(1000, &timer_class);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL myhaMaster::run()
+bool myhaMaster::run()
 {
-	if (init() == cFALSE)
+	if (init() == false)
 	{
 		bnf::instance()->Clear();
-		return cFALSE;
+		return false;
 	}
 
 	printf(">>>> start service Monitor(%s)\n", getServiceIP());
@@ -68,7 +60,7 @@ tBOOL myhaMaster::run()
 
 	printf(">>>> end service Monitor(%s)\n", getServiceIP());
 
-	return cTRUE;
+	return true;
 }
 
 void myhaMaster::end()
@@ -77,7 +69,7 @@ void myhaMaster::end()
 
 void myhaMaster::processTimerSession( TimerSession* PSession )
 {
-	if (PSession->GetHandle() == myhaMaster::server_command_handle_)
+	if (PSession->GetHandle() == myhaMaster::server_command_handle)
 	{
 		uint16_t port = 3306;
 

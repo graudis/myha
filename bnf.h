@@ -23,10 +23,6 @@
 #define CONNECT_SESSION_INDENTIFY			(0x01000000)
 #define TIMER_SESSION_INDENTIFY				(0x02000000)
 #define LISTEN_SESSION_INDENTIFY			(0x04000000)
-// #define DOMAIN_SESSION_INDENTIFY			(0x08000000)
-// #define DOMAIN_CONNECT_SESSION_INDENTIFY	(0x0F000000)
-// #define DOMAIN_LISTEN_SESSION_INDENTIFY		(0x10000000)
-
 
 class SessionEvent : public MemoryPoolBase<SessionEvent>
 {
@@ -45,10 +41,10 @@ public:
 		ON_EVENT,
 	};
 
-	SessionEvent(tINT type, SessionBase* session) : type_(type), session_(session) {}
+	SessionEvent(int32_t type, SessionBase* session) : type_(type), session_(session) {}
 	SessionEvent(rnSocketIOHandler* handler, void* data) : type_(ON_EVENT), handler_(handler), data_(data) {}
 
-	tINT type_;
+	int32_t type_;
 	SessionBase* session_;
 	rnSocketIOHandler* handler_;
 	void* data_;
@@ -59,9 +55,7 @@ class bnf
 public:
 	friend class SessionBase;
 	friend class ListenSessionTcp;
-	// friend class ListenSessionDomain;
 	friend class rnSocketIOServiceTcp;
-	// friend class rnSocketIOServiceDomain;
 	friend class TimerSession;
 
 public:
@@ -78,7 +72,7 @@ public:
 
 	void Init(void);
 
-	boost::asio::io_service& GetIoService() { return io_service_; }
+	boost::asio::io_service& GetIoService() { return __io_service; }
 
 	session_handle CreateListen(std::string host, int port, int waittimeout, rnSocketIOHandler* func, size_t receive_buffer_size = 0, size_t send_buffer_size = 0);
 	session_handle CreateListen(const char* host, int port, int waittimeout, rnSocketIOHandler* func, size_t receive_buffer_size = 0, size_t send_buffer_size = 0);
@@ -98,32 +92,24 @@ public:
 	void Run(int worker_thread_count = DEFAULT_IO_WORKER_THREAD_COUNT);
 	void Stop();
 
-	size_t GetSessionCountTcp() { return tcp_session_list_.size(); }
-	// size_t GetSessionCountDomain() { return domain_session_list_.size(); }
+	size_t GetSessionCountTcp() { return __tcp_session_list.size(); }
 
-	SessionEvent* GetSessionFromQueue() { return session_queue_.wait_front_pop(); }
-	void PutSessionEvent(tINT type, SessionBase* session) { session_queue_.push_signal(new SessionEvent(type, session)); }
+	SessionEvent* GetSessionFromQueue() { return __session_queue.wait_front_pop(); }
+	void PutSessionEvent(int32_t type, SessionBase* session) { __session_queue.push_signal(new SessionEvent(type, session)); }
 
-	void PutSessionEvent(rnSocketIOHandler* handler, void* data) { session_queue_.push_signal(new SessionEvent(handler, data)); }
+	void PutSessionEvent(rnSocketIOHandler* handler, void* data) { __session_queue.push_signal(new SessionEvent(handler, data)); }
 
-	tINT GetSessionQueueCount() { return session_queue_.size(); }
+	int32_t GetSessionQueueCount() { return __session_queue.size(); }
 
 	SessionBase* GetSessionPointer(session_handle handle);
 
-	void SetSessionProcessFunc(session_process_func func) { session_process_func_ = func; }
-	tBOOL ProcessEvent(SessionEvent::SP& session_event);
+	void SetSessionProcessFunc(session_process_func func) { __session_process_func = func; }
+	bool ProcessEvent(SessionEvent::SP& session_event);
 
 	void Clear();
 
 	void growSessionBuffer();
 	void growConnectSessionBuffer();
-
-	// Domain Service
-	// session_handle CreateListenDomain(int port, int waittimeout, rnSocketIOHandler* func, size_t receive_buffer_size = 0, size_t send_buffer_size = 0);
-	// void CloseListenDomain(session_handle handle);
-	// session_handle CreateConnectDomain(int port, void* user_data);
-	// void growSessionBufferDomain();
-	// void growConnectSessionBufferDomain();
 
 private:
 	void WorkerThread();
@@ -131,40 +117,29 @@ private:
 	void SessionProcessThread();
 
 private:
-	boost::ptr_vector<rnSocketIOService> tcp_session_buf_;
-	boost::ptr_vector<rnSocketIOService> tcp_connect_session_buf_;
-	// boost::ptr_vector<rnSocketIOService> domain_session_buf_;
-	// boost::ptr_vector<rnSocketIOService> domain_connect_session_buf_;
+	boost::ptr_vector<rnSocketIOService> __tcp_session_buf;
+	boost::ptr_vector<rnSocketIOService> __tcp_connect_session_buf;
 
-	seq_manager_ts<session_handle> timer_session_seq_;
-	seq_manager_ts<session_handle> tcp_session_seq_;
-	seq_manager_ts<session_handle> tcp_connect_session_seq_;
-	seq_manager_ts<session_handle> tcp_listen_session_seq_;
-	// seq_manager_ts<session_handle> domain_session_seq_;
-	// seq_manager_ts<session_handle> domain_connect_session_seq_;
-	// seq_manager_ts<session_handle> domain_listen_session_seq_;
+	seq_manager_ts<session_handle> __timer_session_seq;
+	seq_manager_ts<session_handle> __tcp_session_seq;
+	seq_manager_ts<session_handle> __tcp_connect_session_seq;
+	seq_manager_ts<session_handle> __tcp_listen_session_seq;
 
-	map_session_list_t timer_session_list_;
-	map_session_list_t tcp_session_list_;
-	map_session_list_t tcp_connect_session_list_;
-	map_session_list_t tcp_listen_session_list_;
-	// map_session_list_t domain_session_list_;
-	// map_session_list_t domain_connect_session_list_;
-	// map_session_list_t domain_listen_session_list_;
+	map_session_list_t __timer_session_list;
+	map_session_list_t __tcp_session_list;
+	map_session_list_t __tcp_connect_session_list;
+	map_session_list_t __tcp_listen_session_list;
 
-	session_queue_t session_queue_;
+	session_queue_t __session_queue;
 
-	boost::thread_group thread_group_;
-	boost::asio::io_service io_service_;
+	boost::thread_group __thread_group;
+	boost::asio::io_service __io_service;
 
-	queue_ts<session_handle> remove_session_queue_;
+	queue_ts<session_handle> __remove_session_queue;
 
-	// 	std::auto_ptr<boost::asio::io_service::work>	io_service_work_;
-	boost::shared_ptr<boost::asio::io_service::work>	io_service_work_;
+	boost::shared_ptr<boost::asio::io_service::work> __io_service_work;
 
-	bool stopped_;
+	bool __stopped;
 
-	session_process_func session_process_func_;
-
-	//	boost::asio::io_service::work		io_service_work_;
+	session_process_func __session_process_func;
 };

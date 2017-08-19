@@ -6,261 +6,42 @@
 enum PLOCAL_TYPE_
 {
 	PTYPE_LOCAL_NONE = 0,
-	PTYPE_LOCAL_END,
-	PTYPE_LOCAL_LOGIN_NEW,
-	PTYPE_LOCAL_LOGIN_DELETE,
-	PTYPE_LOCAL_LOGIN_SESSION,
-	PTYPE_LOCAL_LOGIN_LOCK,
-	PTYPE_LOCAL_USER_COUNT,
-	PTYPE_LOCAL_LOGIN_LIMIT,
-	PTYPE_LOCAL_DELETE_ACTOR,
-	PTYPE_LOCAL_MISSION_MAP_ANNOUNCE,
-
-	PTYPE_LOCAL_JACKPOT_MONEY,
-	PTYPE_LOCAL_JACKPOT_RESULT_BROADCASTING,
-
-	PTYPE_LOCAL_CHECK_MOVABLE_MAP,
-	PTYPE_LOCAL_IN_MAP,
-	PTYPE_LOCAL_MOVE_MAP,
-	PTYPE_LOCAL_OUT_MAP,
-
-	PTYPE_LOCAL_CURRENT_CONNECT_USERS,	// 동접
-	PTYPE_LOCAL_CHANNEL_USER_COUNT,		// 채널별 유저수
-
-	PTYPE_LOCAL_PRODUCE_SUCCESS_ANNOUNCE,
-
-	PTYPE_LOCAL_PROCESS_INFO,			// 데몬의 프로세스 번호를 알려준다(데몬 RUN OR KILL때문)
 	PTYPE_LOCAL_SERVER_INFO,
 	PTYPE_LOCAL_CONNECTION_INFO,
-
-	PTYPE_LOCAL_CHANNEL_MAP_INFO,		// 맵의 체널 유무, 최대 접속자수 정보
-	PTYPE_LOCAL_PACKET_VERSION,			// 패킷 버전 정보를 알려줌
-
-	PTYPE_LOCAL_COMPLETED_QUEST_INFO,
-
-	PTYPE_LOCAL_REALTIME_EVENT_UPDATE,
-
-	PTYPE_LOCAL_BAN_NAME,				// 유저를 강제로 logout시킴 gcontainer -> all proxy
-
-	PTYPE_LOCAL_LOGIN_CHAT_NEW,			// 채팅 서버 접속 알림
-	PTYPE_LOCAL_LOGIN_CHAT_DEL,			// 채팅 서버 종료 알림
-
-	PTYPE_LOCAL_ACTOR_OPTION,			// 액터 옵션
-
-	PTYPE_LOCAL_UPDATE_LOGIN_CONNECT_COUNT,		//	최대 동접자수 변경
-	PTYPE_LOCAL_UPDATE_MAP_CONNECT_COUNT,		//	맵별 최대 동접자수 변경
-	PTYPE_LOCAL_ADMIN_FORCE_LOGOUT,		// 유저가 종료 안될시에 메모리에서 강제 해제
-
-	PTYPE_LOCAL_FORCE_OUT_MAP,
-
-	PTYPE_LOCAL_CHAT_BAN,				// 채팅 금지
-	PTYPE_LOCAL_SERVICE_EXPIRE_TIME,
-
-	PTYPE_LOCAL_OPEN_MISSION_MAP,
-	PTYPE_LOCAL_CLOSE_MISSION_MAP,
-	PTYPE_LOCAL_JOIN_MISSION_MAP_REQ,
-	PTYPE_LOCAL_JOIN_MISSION_MAP_RES,
-	PTYPE_LOCAL_REMOVE_QUEUE_MISSION_MAP,
-	PTYPE_LOCAL_PCBANG_FLAG,
-
-	PTYPE_LOCAL_SERVICE_GROUP_LOCK,
-
-	PTYPE_LOCAL_PING,
-
-	PTYPE_LOCAL_CREATE_INSTANCE,
-	PTYPE_LOCAL_DESTROY_INSTANCE,
-	PTYPE_LOCAL_BIND_INSTANCE,
-	PTYPE_LOCAL_UNBIND_USER_INSTANCE,
-	PTYPE_LOCAL_UNBIND_PARTY_INSTANCE,
-	PTYPE_LOCAL_QUERY_BOUND_INSTANCE,
-	PTYPE_LOCAL_BILLING_SERVICE_LOCK,
-	PTYPE_LOCAL_AUTOUSER_BAN,
-	PTYPE_LOCAL_UPDATE_DAILY_QUEST,
-	PTYPE_LOCAL_CHANGE_SERVER_SETTING,
-	PTYPE_LOCAL_UPDATE_DAILY_PCBANG_EVENT,
-	PTYPE_LOCAL_ADD_PACKET_LOG,
-	PTYPE_LOCAL_REMOVE_PACKET_LOG,
-	PTYPE_LOCAL_KICK_LOGIN_SERVER_USER,
-	PTYPE_LOCAL_KICK_PROXY_SERVER_USER,
-	PTYPE_LOCAL_AUTOUSER_QUESTION_FASTPACKET,
-	PTYPE_LOCAL_UPDATE_DAILY_TOWER_COUNT,
-
-	PTYPE_LOCAL_POST_EVENT,
-	PTYPE_LOCAL_RECALL_POST_EVENT,
-
-	PTYPE_LOCAL_LUCKY_ROULETTE_RESET_TIME,
-
-	PTYPE_LOCAL_CHANGE_DAY,
-	PTYPE_LOCAL_STOP_ROULETTE,
-
-	PTYPE_LOCAL_UPDATE_DAILY_BROKER_QUEST,
-
-	PTYPE_LOCAL_COMPLETED_ONEDAY_QUEST_INFO,			// 완료된 OneDay Quest 목록
-	PTYPE_LOCAL_RESET_COMEPLETED_ONEDAY_QUEST_INFO,		// 완료된 OneDay Quest 목록 리셋
-
-	PTYPE_LOCAL_CENTER_INMAP,
-	PTYPE_LOCAL_CENTER_OUTMAP,
-	PTYPE_LOCAL_RESET_INSTANCE,
-	PTYPE_LOCAL_RESET_INSTANCE_ALL,
-	PTYPE_LOCAL_RESET_INSTANCE_LIST,
-	PTYPE_LOCAL_INSTANCE_COOLTIME_LIST,
-	PTYPE_LOCAL_RESET_INSTANCE_COOLTIME_ALL,
-	PTYPE_LOCAL_ADD_INSTANCE_COOLTIME,
-	PTYPE_LOCAL_UPDATE_INSTANCE_UNLOAD_TIME,
-	PTYPE_LOCAL_START_DESTROY_INSTANCE,
-	PTYPE_LOCAL_CANCEL_DESTROY_INSTANCE,
-
-	PTYPE_LOCAL_EVENT_FLAG_SESO_TIME,					// 세소 이벤트 업데이트
-	PTYPE_LOCAL_RELOAD_CREATE_LIMIT,
-	PTYPE_LOCAL_UPDATE_EVENT_LIST,
-
-	PTYPE_LOCAL_RESET_TODAY_MISSION,					// 오늘의 미션 리셋
-
-
-	PTYPE_LOCAL_GAME_ANNOUNCE,
-	PTYPE_LOCAL_CHANGE_ACTOR_NAME,
-	PTYPE_LOCAL_REALTIME_EVENT_STATUS,					// 실시간 이벤트 강제로 멈춤 및 해제 기능(비상시)
-
-	PTYPE_LOCAL_SERVER_INIT,
-
-	PTYPE_LOCAL_SERVER_COMMAND_UPDATE,					// server command 업데이트
-	PTYPE_LOCAL_RAID_MOB_REGEN_STATUS,
-	PTYPE_LOCAL_SEND_SCHEDULE_MAIL,
-
-	PTYPE_LOCAL_ERROR_ETIMEDOUT,
-	PTYPE_LOCAL_UPDATE_INS_RESET_COUNT,
-
-	PTYPE_LOCAL_DB_STATUS,
-
-	PTYPE_LOCAL_MAX						//
+	PTYPE_LOCAL_MAX,
 };
 
 struct TConnectionInfo
 {
-	tBYTE	type_;
-	tUSINT	id_;
-	tUSINT	channelid_;
-	tCHAR	ip_[IP_STRING_MAX];
-	tINT	port_;
-};
-
-struct TLoginCount
-{
-	tUSINT	proxy_id_;
-	tUSINT	proxy_users_;
+	uint8_t		type;
+	uint16_t	id;
+	uint16_t	channel_id;
+	char		ip[IP_STRING_MAX];
+	int32_t		port;
 };
 
 struct TServerInfo
 {
-	tINT type_;
-	tINT id_;
-	tINT channel_;
+	int32_t type;
+	int32_t id;
+	int32_t channel;
 };
 
 struct TListenInfo
 {
-	tBYTE for_type_;
-	tCHAR ip_[IP_STRING_MAX];
-	tINT port_;
+	uint8_t	for_type;
+	char	ip[IP_STRING_MAX];
+	int32_t	port;
 };
 
-struct TMapToMapUserData
-{
-	tSINT anger_count_;
-	tUINT ready_anger_expired_time_;
-	tUINT anger_expired_time_;
-
-	tINT attack_linked_id_;
-
-	tINT return_map_id_;
-	tFLOAT return_x_;
-	tFLOAT return_z_;
-	tINT return_channel_id_;
-
-	tINT combo_count_;
-	tINT state_;
-
-	tINT link_set_num_;
-	TFunctionLink link_[STATUS_FUNCLINK_MAX];
-
-	tINT use_portal_id_;
-	tINT difficulty_;
-	tINT instance_id_;
-	tBOOL party_bind_;
-	tINT repress_quest_time_;
-	tINT active_pet_list_index_;
-	tINT pet_command_type_;
-};
-
-enum
-{
-	REALTIME_EVENT_EXP_PERCENT,
-	REALTIME_EVENT_COIN_PERCENT,
-	REALTIME_EVENT_FAME_PERCENT,
-	REALTIME_EVENT_JACKPOT_PERCENT,
-	REALTIME_EVENT_MAX
-};
-
-struct TRealTimePercent
-{
-	tSINT map_id_;
-	tSINT event_percent_[REALTIME_EVENT_MAX];
-};
-
-inline const tCHAR* getServerName(tINT sort)
+inline const char* getServerName(int32_t sort)
 {
 	switch (sort)
 	{
-	case SERVER_TYPE_NONE:
-		return "None";
-		break;
-	case SERVER_TYPE_CENTER:
-		return "Center";
-		break;
-	case SERVER_TYPE_HCASH:
-		return "Hcash";
-		break;
-	case SERVER_TYPE_LOGIN:
-		return "Login";
-		break;
-	case SERVER_TYPE_PROXY:
-		return "Proxy";
-		break;
-	case SERVER_TYPE_GCONTAINER:
-		return "Container";
-		break;
-	case SERVER_TYPE_GMOB:
-		return "Mob";
-		break;
-	case SERVER_TYPE_DODB:
-		return "Dodb";
-		break;
-	case SERVER_TYPE_GLOG:
-		return "Glog";
-		break;
-	case SERVER_TYPE_BANK:
-		return "Bank";
-		break;
-	case SERVER_TYPE_MONITOR:
-		return "Monitor";
-		break;
-	case SERVER_TYPE_CHAT:
-		return "Chat";
-		break;
-	case SERVER_TYPE_SERVERCMD:
-		return "Servercmd";
-		break;
-	case SERVER_TYPE_RESTORATION:
-		return "Restoration";
-		break;
+	case SERVER_TYPE_NONE:		return "None";		break;
+	case SERVER_TYPE_CENTER:	return "Center";	break;
+	case SERVER_TYPE_MONITOR:	return "Monitor";	break;
 	}
 
 	return "Unknown";
 }
-
-
-#define CONNECT_LOG_INFO( server_info, ip, ... )	do { \
-	LogSystem::getLogBuffer()->addMessagef( "sort[%s] id[%d] channel[%d] ip[%s] - ", \
-	getServerName( server_info.type_ ), server_info.id_, server_info.channel_, ip ); \
-	LOG_INFO( __VA_ARGS__ ); \
-} while( 0 )

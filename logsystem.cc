@@ -7,50 +7,50 @@
 
 #include "logsystem.h"
 
-DEFINE_SINGLETON( LogSystem );
+DEFINE_SINGLETON(LogSystem);
 
-#define MAX_LOG_VALUE_STRING_LEN		1024
+#define MAX_LOG_VALUE_STRING_LEN	(1024)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // LogSystem
 LogSystem::LogSystem()
 {
-	createTls( &tls_key );
+	createTls(&tls_key);
 }
 
 LogSystem::~LogSystem()
 {
 }
 
-void LogSystem::setSubstitutedValue( const char* name, float value )
+void LogSystem::setSubstitutedValue(const char* name, float value)
 {
 	char value_str[MAX_LOG_VALUE_STRING_LEN];
-	snprintf( value_str, MAX_LOG_VALUE_STRING_LEN, "%f", value );
-	setSubstitutedValue( name, value_str );
+	snprintf(value_str, MAX_LOG_VALUE_STRING_LEN, "%f", value);
+	setSubstitutedValue(name, value_str);
 }
 
-void LogSystem::setSubstitutedValue( const char* name, int value )
+void LogSystem::setSubstitutedValue(const char* name, int value)
 {
 	char value_str[MAX_LOG_VALUE_STRING_LEN];
-	snprintf( value_str, MAX_LOG_VALUE_STRING_LEN, "%d", value );
-	setSubstitutedValue( name, value_str );
+	snprintf(value_str, MAX_LOG_VALUE_STRING_LEN, "%d", value);
+	setSubstitutedValue(name, value_str);
 }
 
-void LogSystem::setSubstitutedValue( const char* name, const char* value )
+void LogSystem::setSubstitutedValue(const char* name, const char* value)
 {
-	::setenv( name, value, 1 );
+	::setenv(name, value, 1);
 }
 
-void LogSystem::setSubstitutedValuef( const char* name, const char* fmt, ... )
+void LogSystem::setSubstitutedValuef(const char* name, const char* fmt, ...)
 {
 	char value_str[MAX_LOG_VALUE_STRING_LEN];
 
 	va_list args;
-	va_start( args, fmt );
-	vsnprintf( value_str, MAX_LOG_VALUE_STRING_LEN, fmt, args );
-	va_end( args );
+	va_start(args, fmt);
+	vsnprintf(value_str, MAX_LOG_VALUE_STRING_LEN, fmt, args);
+	va_end(args);
 
-	setSubstitutedValue( name, value_str );
+	setSubstitutedValue(name, value_str);
 }
 
 void LogSystem::configureBasic()
@@ -58,14 +58,14 @@ void LogSystem::configureBasic()
 	log4cxx::BasicConfigurator::configure();
 }
 
-void LogSystem::configureProperty( const char* filename )
+void LogSystem::configureProperty(const char* filename)
 {
-	log4cxx::PropertyConfigurator::configure( filename );
+	log4cxx::PropertyConfigurator::configure(filename);
 }
 
-void LogSystem::configureXml( const char* filename )
+void LogSystem::configureXml(const char* filename)
 {
-	log4cxx::xml::DOMConfigurator::configure( filename );
+	log4cxx::xml::DOMConfigurator::configure(filename);
 }
 
 tls_key_t LogSystem::getTlsKey()
@@ -73,9 +73,9 @@ tls_key_t LogSystem::getTlsKey()
 	return getInstance().tls_key;
 }
 
-logger_t LogSystem::getLogger( const char* name )
+logger_t LogSystem::getLogger(const char* name)
 {
-	return log4cxx::Logger::getLogger( name );
+	return log4cxx::Logger::getLogger(name);
 }
 
 logger_t LogSystem::getRootLogger()
@@ -87,15 +87,15 @@ CLogBuffer* LogSystem::getLogBuffer()
 {
 	tls_key_t tls_key = LogSystem::getTlsKey();
 
-	CLogBuffer* message = (CLogBuffer *)getTlsValue( tls_key );
-	if( NULL == message ) {
+	CLogBuffer* message = (CLogBuffer *)getTlsValue(tls_key);
+	if (NULL == message)
+	{
 		message = new CLogBuffer();
-		setTlsValue( tls_key, message );
+		setTlsValue(tls_key, message);
 	}
 
 	return message;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // CLogMessage
@@ -109,17 +109,17 @@ CLogBuffer::~CLogBuffer()
 {
 }
 
-void CLogBuffer::addMessagef( const char* fmt, ... )
+void CLogBuffer::addMessagef(const char* fmt, ...)
 {
 	va_list args;
-	va_start( args, fmt );
-	m_length += vsnprintf( m_message + m_length, MAX_LOG_MESSAGE_LEN - m_length, fmt, args );
-	va_end( args );
+	va_start(args, fmt);
+	m_length += vsnprintf(m_message + m_length, MAX_LOG_MESSAGE_LEN - m_length, fmt, args);
+	va_end(args);
 }
 
-void CLogBuffer::addMessagev( const char* fmt, va_list args )
+void CLogBuffer::addMessagev(const char* fmt, va_list args)
 {
-	m_length += vsnprintf( m_message + m_length, MAX_LOG_MESSAGE_LEN - m_length, fmt, args );
+	m_length += vsnprintf(m_message + m_length, MAX_LOG_MESSAGE_LEN - m_length, fmt, args);
 }
 
 void CLogBuffer::reset()
@@ -127,7 +127,6 @@ void CLogBuffer::reset()
 	m_message[0] = '\0';
 	m_length = 0;
 }
-
 
 /*
 #include "logsystem.h"

@@ -5,14 +5,13 @@ class rnSocketIOService;
 class rnSocketIOHandler
 {
 public:
-					rnSocketIOHandler();
+	rnSocketIOHandler();
+	virtual ~rnSocketIOHandler();
 
-	virtual			~rnSocketIOHandler();
+	virtual void operate(rnSocketIOService* service) = 0;
 
-	virtual void	operate(rnSocketIOService* service) = 0;
+	virtual void onConnect(rnSocketIOService* service) {}
+	virtual void onConnectFail(rnSocketIOService* service) {}
 
-	virtual void	onConnect(rnSocketIOService* service) {}
-	virtual void	onConnectFail(rnSocketIOService* service) {}
-
-	virtual void	onEvent( void* data ) {}
+	virtual void onEvent( void* data ) {}
 };

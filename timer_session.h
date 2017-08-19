@@ -3,7 +3,6 @@
 #include "session_base.h"
 #include "MemoryPoolBase.h"
 
-
 class TimerSession : public SessionBase, public MemoryPoolBase<TimerSession>
 {
 public:
@@ -18,7 +17,7 @@ private:
 	void Stop();
 
 private:
-	boost::asio::deadline_timer		timer_;
-	int								millisecond_;
-	bool							running_;
+	boost::asio::deadline_timer __timer;
+	int32_t __millisecond;
+	bool __running;
 };

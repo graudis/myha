@@ -5,8 +5,8 @@ namespace Config
 	class INI
 	{
 	public:
-		INI();
-		~INI();
+		INI() {}
+		~INI() {}
 
 		static INI* Instance()
 		{
@@ -16,25 +16,10 @@ namespace Config
 
 		bool init(std::string file_name);
 
-		std::string getVirtualIP()
-		{
-			return __dbvip;
-		}
-
-		std::string getVirtualIPNIC()
-		{
-			return __dbvip_nic;
-		}
-
-		std::string getMasterIP()
-		{
-			return __master_ip;
-		}
-
-		std::string getSlaveIP()
-		{
-			return __slave_ip;
-		}
+		std::string getVirtualIP() { return __dbvip; }
+		std::string getVirtualIPNIC() { return __dbvip_nic; }
+		std::string getMasterIP() { return __master_ip; }
+		std::string getSlaveIP() { return __slave_ip; }
 
 	private:
 		std::string __dbvip;

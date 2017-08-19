@@ -5,28 +5,25 @@
 
 #include "boostcommon.h"
 
-#define SEQ_MANAGER_GROW_INDEX_COUNT			(32)
+#define SEQ_MANAGER_GROW_INDEX_COUNT	(32)
 
 template<class _Ty>
 class seq_manager
 {
 public:
-	seq_manager() : total_count_(0)
+	seq_manager()
 	{
+		total_count_ = 0;
 	}
 
-	~seq_manager()
-	{
-	}
+	~seq_manager() {}
 
 	void init(_Ty _startno, _Ty _endno)
 	{
 		assert(_startno < _endno);
 
 		for (_Ty i = _startno; i <= _endno; ++i)
-		{
 			tbuf_.push_back(i);
-		}
 
 		total_count_ = tbuf_.size();
 		endno_ = _endno;
@@ -40,9 +37,7 @@ public:
 		if (tbuf_.empty())
 		{
 			for (int i = 0; i < SEQ_MANAGER_GROW_INDEX_COUNT; ++i)
-			{
 				tbuf_.push_back(++endno_);
-			}
 
 			total_count_ += SEQ_MANAGER_GROW_INDEX_COUNT;
 			flag = false;
@@ -57,20 +52,17 @@ public:
 	bool push(_Ty index)
 	{
 		if (tbuf_.size() >= total_count_)
-		{
 			return false;
-		}
 
 		tbuf_.push_back(index);
 		return true;
 	}
 
 private:
-	volatile size_t			total_count_;
-	std::deque<_Ty>			tbuf_;
-	_Ty						endno_;
+	volatile size_t total_count_;
+	std::deque<_Ty> tbuf_;
+	_Ty endno_;
 };
-
 
 template<class _Ty>
 class seq_manager_ts : public seq_manager<_Ty>
@@ -81,16 +73,16 @@ public:
 
 	bool pop(_Ty &data)
 	{
-		boost::recursive_mutex::scoped_lock lock(mutex);
+		boost::recursive_mutex::scoped_lock lock(__mutex);
 		return seq_manager<_Ty>::pop(data);
 	}
 
 	bool push(_Ty index)
 	{
-		boost::recursive_mutex::scoped_lock lock(mutex);
+		boost::recursive_mutex::scoped_lock lock(__mutex);
 		return seq_manager<_Ty>::push(index);
 	}
 
 private:
-	boost::recursive_mutex mutex;
+	boost::recursive_mutex __mutex;
 };

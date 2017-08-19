@@ -1,97 +1,52 @@
 #pragma once
 
-struct UserCountInfo
-{
-	tINT crs_user_count_;
-	tINT nhn_user_count_;
-};
-
-
 class MCenterService : public rnSocketIOHandler
 {
 private:
-	typedef boost::unordered_map< tUINT, tINT >		map_t;
-	typedef boost::unordered_map<tUINT, UserCountInfo>	UserCountInfoMap;
+	typedef boost::unordered_map< uint32_t, int32_t > map_t;
 
 public:
 	MCenterService(rnSocketIOService* service);
 	~MCenterService();
 
-	void						operate(rnSocketIOService* service);
+	void operate(rnSocketIOService* service);
 
-	void						setGroupID(tINT group_id);
-	tINT						getGroupID() { return group_id_; }
+	void setGroupID(int32_t group_id);
+	int32_t getGroupID() { return __group_id; }
 
-	void						setProcessID(tINT process_id) { process_id_ = process_id; }
-	tINT						getProcessID() { return process_id_; }
+	void setProcessID(int32_t process_id) { __process_id = process_id; }
+	int32_t getProcessID() { return __process_id; }
 
-	void						setConnectUsers(tINT crs_count, tINT nhn_count);
-	tINT						getCrsConnectUsers() { return crs_connect_users_; }
-	tINT						getNhnConnectUsers() { return nhn_connect_users_; }
-	tINT						getConnectUsers() { return crs_connect_users_ + nhn_connect_users_; }
+	void setloginLimit(int32_t login_limit) { __login_limit = login_limit; }
+	int32_t getloginLimit() { return __login_limit; }
 
-	//	void						setMapConnectUsers( tINT map_id, tINT channel_id, tINT crs_user_count, tINT nhn_user_count );
-	//	UserCountInfo				getMapConnectUsers();
+	rnSocketIOService* service() { return __service; }
 
-	void						setloginLimit(tINT login_limit) { login_limit_ = login_limit; }
-	tINT						getloginLimit() { return login_limit_; }
-
-	//	tINT						getMapConnectLimit( tINT map_id );
-	//	void						setMapConnectLimit( tINT map_id, tINT map_connect_limit );
-	//	void						addMapConnectLimit( tINT map_id );
-
-	rnSocketIOService*			service() { return service_; }
-
-	tBOOL						deliver(rnPacket* packet);
-	tBOOL						deliver(rnPacket::SP packet);
-
-	tFLOAT						getKillMobExpRate() { return kill_mob_exp_rate_; }
-
-	void setStatusValue(tINT* status_value) { memcpy(status_value_, status_value, sizeof(status_value_)); }
-	tINT* getStatusValue() { return status_value_; }
+	bool deliver(rnPacket* packet);
+	bool deliver(rnPacket::SP packet);
 
 private:
-	void handleErrorETIemdOut(rnPacket::SP& packet);
-
-
-private:
-	rnSocketIOService*			service_;
-	TServerInfo					server_session_info_;
-	tINT						group_id_;
-	tINT						process_id_;
-
-	tINT						login_limit_;
-
-	// 그룹별 유저
-	tINT						crs_connect_users_;
-	tINT						nhn_connect_users_;
-
-	// 맵 채널별 유저
-	UserCountInfoMap			map_users_list_;
-	//	map_t						map_users_list_;
-
-	map_t						map_user_limit_list_;
-
-	map_t						channel_starting_list_;
-
-	tFLOAT						kill_mob_exp_rate_;
-	tINT						status_value_[SERVER_STATUS_VALUE_MAX];
+	rnSocketIOService* __service;
+	TServerInfo __server_session_info;
+	int32_t __group_id;
+	int32_t __process_id;
+	int32_t __login_limit;
 };
 
-inline tBOOL MCenterService::deliver(rnPacket* packet)
+inline bool MCenterService::deliver(rnPacket* packet)
 {
-	if (service_ == NULL)
-		return cFALSE;
+	if (__service == NULL)
+		return false;
 
 	return deliver(rnPacket::SP(packet));
 }
 
-inline tBOOL MCenterService::deliver(rnPacket::SP packet)
+inline bool MCenterService::deliver(rnPacket::SP packet)
 {
-	if (service_ == NULL)
-		return cFALSE;
+	if (__service == NULL)
+		return false;
 
-	service_->deliver(packet);
+	__service->deliver(packet);
 
-	return cTRUE;
+	return true;
 }

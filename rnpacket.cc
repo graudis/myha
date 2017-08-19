@@ -8,20 +8,20 @@
 #include "logsystem.h"
 
 
-rnPacket::rnPacket(tSIZE size) : rcount_(0)
+rnPacket::rnPacket(size_t size) : _rcount(0)
 {
-	pHeader_ = reinterpret_cast<Header*>(buffer_);
-	pData_ = buffer_ + PACKET_HEADER_SIZE;
+	_header = reinterpret_cast<Header*>(_buffer);
+	_data = _buffer + PACKET_HEADER_SIZE;
 
-	pHeader_->size_ = PACKET_HEADER_SIZE;
-	pHeader_->group_ = 0;
-	pHeader_->type_ = 0;
+	_header->size = PACKET_HEADER_SIZE;
+	_header->group = 0;
+	_header->type = 0;
 }
 
-rnPacket::rnPacket() : rcount_(0)
+rnPacket::rnPacket() : _rcount(0)
 {
-	pHeader_ = reinterpret_cast<Header*>(buffer_);
-	pData_ = buffer_ + PACKET_HEADER_SIZE;
+	_header = reinterpret_cast<Header*>(_buffer);
+	_data = _buffer + PACKET_HEADER_SIZE;
 }
 
 rnPacket::~rnPacket()
@@ -30,271 +30,228 @@ rnPacket::~rnPacket()
 
 rnPacket* rnPacket::copy()
 {
-	rnPacket *clone = new rnPacket(pHeader_->size_);
-	memcpy(clone->buffer_, buffer_, pHeader_->size_);
+	rnPacket* clone = new rnPacket(_header->size);
+	memcpy(clone->_buffer, _buffer, _header->size);
 	return clone;
 }
 
-void rnPacket::addBYTE(tBYTE v)
+void rnPacket::addBYTE(uint8_t v)
 {
-	*(buffer_ + pHeader_->size_) = v;
-	pHeader_->size_ += sizeof(tBYTE);
+	*(_buffer + _header->size) = v;
+	_header->size += sizeof(uint8_t);
 }
 
-void rnPacket::addBYTE(tBYTE *v, tSIZE count)
+void rnPacket::addBYTE(uint8_t *v, size_t count)
 {
-	tSIZE size = sizeof(tBYTE) * count;
-	memcpy(buffer_ + pHeader_->size_, v, size);
-	pHeader_->size_ += size;
+	size_t size = sizeof(uint8_t) * count;
+	memcpy(_buffer + _header->size, v, size);
+	_header->size += size;
 }
 
-void rnPacket::addBOOL(tBOOL v)
+void rnPacket::addBOOL(bool v)
 {
-	*(buffer_ + pHeader_->size_) = v;
-	pHeader_->size_ += sizeof(tBOOL);
+	*(_buffer + _header->size) = v;
+	_header->size += sizeof(bool);
 }
 
-void rnPacket::addSINT(tSINT v)
+void rnPacket::addSINT(int16_t v)
 {
-	*((tSINT*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tSINT);
+	*((int16_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(int16_t);
 }
 
-void rnPacket::addUSINT(tUSINT v)
+void rnPacket::addUSINT(uint16_t v)
 {
-	*((tUSINT*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tUSINT);
+	*((uint16_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(uint16_t);
 }
 
-void rnPacket::addINT(tINT v)
+void rnPacket::addINT(int32_t v)
 {
-	*((tINT*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tINT);
+	*((int32_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(int32_t);
 }
 
-void rnPacket::addUINT(tUINT v)
+void rnPacket::addUINT(uint32_t v)
 {
-	*((tUINT*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tUINT);
+	*((uint32_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(uint32_t);
 }
 
-void rnPacket::addLONG(tLONG v)
+void rnPacket::addLONG(int32_t v)
 {
-	*((tLONG*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tLONG);
+	*((int32_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(int32_t);
 }
 
-void rnPacket::addULONG(tULONG v)
+void rnPacket::addULONG(uint32_t v)
 {
-	*((tULONG*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tULONG);
+	*((uint32_t*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(uint32_t);
 }
 
-void rnPacket::addFLOAT(tFLOAT v)
+void rnPacket::addFLOAT(float v)
 {
-	*((tFLOAT*)(buffer_ + pHeader_->size_)) = v;
-	pHeader_->size_ += sizeof(tFLOAT);
+	*((float*)(_buffer + _header->size)) = v;
+	_header->size += sizeof(float);
 }
 
-void rnPacket::addVALUE(const tBYTE *v, tSIZE count)
+void rnPacket::addVALUE(const uint8_t *v, size_t count)
 {
-	memcpy(buffer_ + pHeader_->size_, v, count);
-	pHeader_->size_ += count;
+	memcpy(_buffer + _header->size, v, count);
+	_header->size += count;
 }
 
-tBOOL rnPacket::getBYTE(tBYTE &rt)
+bool rnPacket::getBYTE(uint8_t &rt)
 {
-	if (rcount_ + sizeof(tBYTE) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(uint8_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
 
-	rt = *((tBYTE*)(pData_ + rcount_));
-	rcount_ += sizeof(tBYTE);
+	rt = *((uint8_t*)(_data + _rcount));
+	_rcount += sizeof(uint8_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getBOOL(tBOOL &rt)
+bool rnPacket::getBOOL(bool &rt)
 {
-	if (rcount_ + sizeof(tBOOL) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(bool) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tBOOL *)(pData_ + rcount_));
-	rcount_ += sizeof(tBOOL);
+	rt = *((bool *)(_data + _rcount));
+	_rcount += sizeof(bool);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getSINT(tSINT &rt)
+bool rnPacket::getSINT(int16_t &rt)
 {
-	if (rcount_ + sizeof(tSINT) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(int16_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tSINT*)(pData_ + rcount_));
-	rcount_ += sizeof(tSINT);
+	rt = *((int16_t*)(_data + _rcount));
+	_rcount += sizeof(int16_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getUSINT(tUSINT &rt)
+bool rnPacket::getUSINT(uint16_t &rt)
 {
-	if (rcount_ + sizeof(tUSINT) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(uint16_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tUSINT*)(pData_ + rcount_));
-	rcount_ += sizeof(tUSINT);
+	rt = *((uint16_t*)(_data + _rcount));
+	_rcount += sizeof(uint16_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getINT(tINT &rt)
+bool rnPacket::getINT(int32_t &rt)
 {
-	if (rcount_ + sizeof(tINT) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(int32_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tINT*)(pData_ + rcount_));
-	rcount_ += sizeof(tINT);
+	rt = *((int32_t*)(_data + _rcount));
+	_rcount += sizeof(int32_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getUINT(tUINT &rt)
+bool rnPacket::getUINT(uint32_t &rt)
 {
-	if (rcount_ + sizeof(tUINT) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(uint32_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tUINT*)(pData_ + rcount_));
-	rcount_ += sizeof(tUINT);
+	rt = *((uint32_t*)(_data + _rcount));
+	_rcount += sizeof(uint32_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getLONG(tLONG &rt)
+bool rnPacket::getLONG(int32_t &rt)
 {
-	if (rcount_ + sizeof(tLONG) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(int32_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tLONG*)(pData_ + rcount_));
-	rcount_ += sizeof(tLONG);
+	rt = *((int32_t*)(_data + _rcount));
+	_rcount += sizeof(int32_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getULONG(tULONG &rt)
+bool rnPacket::getULONG(uint32_t &rt)
 {
-	if (rcount_ + sizeof(tULONG) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(uint32_t) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tULONG*)(pData_ + rcount_));
-	rcount_ += sizeof(tULONG);
+	rt = *((uint32_t*)(_data + _rcount));
+	_rcount += sizeof(uint32_t);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getFLOAT(tFLOAT &rt)
+bool rnPacket::getFLOAT(float &rt)
 {
-	if (rcount_ + sizeof(tFLOAT) >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + sizeof(float) >= MAX_PACKET_MESSAGE)
+		return false;
 
-	rt = *((tFLOAT*)(pData_ + rcount_));
-	rcount_ += sizeof(tFLOAT);
+	rt = *((float*)(_data + _rcount));
+	_rcount += sizeof(float);
 
-	return cTRUE;
+	return true;
 }
 
-tBOOL rnPacket::getVALUE(tBYTE *v, tINT count)
+bool rnPacket::getVALUE(uint8_t *v, int32_t count)
 {
-	if (rcount_ + count >= MAX_PACKET_MESSAGE)
-		return cFALSE;
+	if (_rcount + count >= MAX_PACKET_MESSAGE)
+		return false;
 
-	memcpy(v, pData_ + rcount_, count);
-	rcount_ += count;
+	memcpy(v, _data + _rcount, count);
+	_rcount += count;
 
-	return cTRUE;
+	return true;
 }
 
 void rnPacket::reset()
 {
-	pHeader_->size_ = PACKET_HEADER_SIZE;
-	pHeader_->group_ = 0;
-	pHeader_->type_ = 0;
+	_header->size = PACKET_HEADER_SIZE;
+	_header->group = 0;
+	_header->type = 0;
 
-	rcount_ = 0;
+	_rcount = 0;
 }
 
 void rnPacket::dumpSimple()
 {
 	std::string packet_group[PGROUP_MAX_ + 1] =
 	{
-		"PGROUP_NONE_                 ",
-		"PGROUP_GUEST_REQUEST         ",
-		"PGROUP_MEMBER_REQUEST        ",
-		"PGROUP_GUEST_RESPONSE        ",
-		"PGROUP_MEMBER_RESPONSE       ",
-		"PGROUP_MEMBER_ANNOUNCE       ",
-		"PGROUP_MEMBER_UPDATE         ",
-		"PGROUP_MEMBER_DEATH_UPDATE   ",
-		"PGROUP_MEMBER_DEATH_ANNOUNCE ",
-		"PGROUP_CHAT_GUEST_REQUEST    ",
-		"PGROUP_CHAT_GUEST_RESPONSE   ",
-		"PGROUP_CHAT_MEMBER_REQUEST   ",
-		"PGROUP_CHAT_MEMBER_RESPONSE  ",
-		"PGROUP_CHAT_MEMBER_ANNOUNCE  ",
-		"PGROUP_GAME_REQUEST          ",
-		"PGROUP_GAME_RESPONSE         ",
-		"PGROUP_GAME_ANNOUNCE         ",
-		"PGROUP_LOCAL_REQUEST         ",
-		"PGROUP_LOCAL_RESPONSE        ",
-		"PGROUP_LOCAL_ANNOUNCE        ",
-		"PGROUP_HCASH_REQUEST         ",
-		"PGROUP_HCASH_RESPONSE        ",
-		"XXX_PGROUP_GUILD_ANNOUNCE    ",
-		"PGROUP_GUILD_UPDATE          ",
-		"XXX_PGROUP_GLOG_ANNOUNCE     ",
-		"PGROUP_BANK_REQUEST          ",
-		"PGROUP_BANK_RESPONSE         ",
-		"PGROUP_CONTAINER_BROKER      ",
-		"PGROUP_PARTY_UPDATE          ",
-		"PGROUP_MONITOR_REQUEST       ",
-		"PGROUP_MONITOR_RESPONSE      ",
-		"PGROUP_MAIL_REQUEST          ",
-		"PGROUP_MAIL_RESPONSE         ",
-		"PGROUP_MAIL_ANNOUNCE         ",
-		"PGROUP_CONSIGN_REQUEST       ",
-		"PGROUP_CONSIGN_RESPONSE      ",
-		"PGROUP_CONSIGN_ANNOUNCE      ",
-		"PGROUP_CHAT_REQUEST          ",
-		"PGROUP_CHAT_RESPONSE         ",
-		"PGROUP_CHAT_ANNOUNCE         ",
-		"PGROUP_MONITOR_ANNOUNCE      ",
-		"PGROUP_SOUL_CONSIGN_REQUEST  ",
-		"PGROUP_SOUL_CONSIGN_RESPONSE ",
-		"PGROUP_SOUL_CONSIGN_ANNOUNCE ",
-		"PGROUP_TCOIN_REQUEST         ",
-		"PGROUP_TCOIN_RESPONSE        ",
-		"PGROUP_BILLING_REQUEST       ",
-		"PGROUP_BILLING_RESPONSE      ",
-		"PGROUP_BILLING_ANNOUNCE      ",
-		"PGROUP_MAX_                  "
+		"PGROUP_NONE_           ",
+		"PGROUP_LOCAL_REQUEST   ",
+		"PGROUP_LOCAL_RESPONSE  ",
+		"PGROUP_LOCAL_ANNOUNCE  ",
+		"PGROUP_MONITOR_RESPONSE",
+		"PGROUP_MONITOR_ANNOUNCE",
+		"PGROUP_MAX_            "
 	};
 
 	LOG_DEBUG("Packet Info. Group=[ %2d, %s ] Type=[ %3d ] Size=[ %4d ]",
-		pHeader_->group_, packet_group[pHeader_->group_].c_str(), pHeader_->type_, pHeader_->size_);
+		_header->group, packet_group[_header->group].c_str(), _header->type, _header->size);
 }
 
 void rnPacket::dump()
 {
 	LOG_DEBUG("packet dump. size: %d, group: %d, type: %d",
-		pHeader_->size_, pHeader_->group_, pHeader_->type_);
+		_header->size, _header->group, _header->type);
 
 	int p = 0;
-	while (p < pHeader_->size_)
+	while (p < _header->size)
 	{
 		char hex_log[256];
 		int log_len = 0;
-		for (int j = 0; j < 16 && p < pHeader_->size_; ++j)
+		for (int j = 0; j < 16 && p < _header->size; ++j)
 		{
-			log_len += snprintf(hex_log + log_len, 256 - log_len, "%.2X ", buffer_[p++]);
+			log_len += snprintf(hex_log + log_len, 256 - log_len, "%.2X ", _buffer[p++]);
 		}
 
 		LOG_DEBUG("%s", hex_log);

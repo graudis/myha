@@ -42,7 +42,6 @@
 #include <boost/thread.hpp>
 
 #include "rntype.h"
-#include "rntime.h"
 
 #define UNORDERED_MAP boost::unordered_map
 #define UNORDERED_SET boost::unordered_set

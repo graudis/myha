@@ -8,16 +8,16 @@
 
 ListenSessionTcp::ListenSessionTcp( boost::asio::io_service& io_service, int waittimeout ) :
 	ListenSession(io_service, SessionBase::LISTEN_SESSION),
-	acceptor_( io_service ),
-	session_wait_time_( waittimeout ),
-	ref_count_( 0 )
+	__acceptor( io_service ),
+	__session_wait_time( waittimeout ),
+	__ref_count( 0 )
 {
-	bnf::instance()->tcp_listen_session_seq_.pop(handle_);
+	bnf::instance()->__tcp_listen_session_seq.pop(_handle);
 }
 
 ListenSessionTcp::~ListenSessionTcp()
 {
-	bnf::instance()->tcp_listen_session_seq_.push(handle_);
+	bnf::instance()->__tcp_listen_session_seq.push(_handle);
 }
 
 bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
@@ -27,35 +27,35 @@ bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler*
 
 	std::string port_string = oss.str();
 
-	boost::asio::ip::tcp::resolver resolver(io_service_);
+	boost::asio::ip::tcp::resolver resolver(_io_service);
 
 	boost::asio::ip::tcp::resolver::query query(host, port_string);
 	boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
 	boost::system::error_code error;
 
-	acceptor_.open(endpoint.protocol(), error);
+	__acceptor.open(endpoint.protocol(), error);
 	if (error)
 	{
 		LOG_ERROR("bnf - acceptor_.open error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
 		return false;
 	}
 
-	acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true), error);
+	__acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true), error);
 	if (error)
 	{
 		LOG_ERROR("bnf - acceptor_.set_option error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
 		return false;
 	}
 
-	acceptor_.bind(endpoint, error);
+	__acceptor.bind(endpoint, error);
 	if (error)
 	{
 		LOG_ERROR("bnf - acceptor_.bind error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
 		return false;
 	}
 
-	acceptor_.listen(boost::asio::socket_base::max_connections, error);
+	__acceptor.listen(boost::asio::socket_base::max_connections, error);
 	if (error)
 	{
 		LOG_ERROR("bnf - acceptor_.listen error. %s:%d, error: %s", host.c_str(), port, error.message().c_str());
@@ -64,30 +64,30 @@ bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler*
 
 	closeOnExecOn();
 
-	function_ = func;
+	__function = func;
 
 	session_handle shandle;
-	if (bnf::instance()->tcp_session_seq_.pop(shandle) == false)
+	if (bnf::instance()->__tcp_session_seq.pop(shandle) == false)
 	{
 		bnf::instance()->growSessionBuffer();
 		LOG_INFO("session buffer growing.");
 	}
 
-	rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)&bnf::instance()->tcp_session_buf_[shandle];
-	pSession->Open(shandle, handle_, session_wait_time_);
+	rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)&bnf::instance()->__tcp_session_buf[shandle];
+	pSession->Open(shandle, _handle, __session_wait_time);
 
 	IncRefCount();
-	acceptor_.async_accept(pSession->Socket(),
+	__acceptor.async_accept(pSession->Socket(),
 			boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
 
-	LOG_INFO("bnf - open listen socket. fd: %d, handle: %d", acceptor_.native(), GetHandle());
+	LOG_INFO("bnf - open listen socket. fd: %d, handle: %d", __acceptor.native(), GetHandle());
 
 	return true;
 }
 
 void ListenSessionTcp::Close()
 {
-	io_service_.post( boost::bind( &ListenSessionTcp::HandleClose, this ) );
+	_io_service.post( boost::bind( &ListenSessionTcp::HandleClose, this ) );
 }
 
 void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const boost::system::error_code& error)
@@ -100,9 +100,9 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 		pSession->IncRefCount();
 
 		// event
-		function_->operate(pSession);
+		__function->operate(pSession);
 
-		bnf::instance()->tcp_session_list_.insert(pSession->GetHandle(), pSession);
+		bnf::instance()->__tcp_session_list.insert(pSession->GetHandle(), pSession);
 		pSession->Run();
 
 		LOG_INFO("bnf [%s] - accepted. fd: %d, handle: %d", pSession->ip().c_str(), pSession->Socket().native(), pSession->GetHandle());
@@ -111,13 +111,13 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 
 		while (1)
 		{
-			if (bnf::instance()->tcp_session_seq_.pop(shandle) == false)
+			if (bnf::instance()->__tcp_session_seq.pop(shandle) == false)
 			{
 				bnf::instance()->growSessionBuffer();
 				LOG_INFO("session buffer growing.");
 			}
 
-			pSession = (rnSocketIOServiceTcp*)&bnf::instance()->tcp_session_buf_[shandle];
+			pSession = (rnSocketIOServiceTcp*)&bnf::instance()->__tcp_session_buf[shandle];
 			if (((rnSocketIOServiceTcp*)pSession)->Socket().is_open() == false)
 			{
 				break;
@@ -127,13 +127,13 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 		}
 
 
-		pSession->Open(shandle, handle_, session_wait_time_);
-		acceptor_.async_accept(pSession->Socket(),
+		pSession->Open(shandle, _handle, __session_wait_time);
+		__acceptor.async_accept(pSession->Socket(),
 				boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
 	}
 	else
 	{
-		LOG_ERROR("bnf - HandleAccept error. fd: %d, handle: %d, error: %s", acceptor_.native(), GetHandle(), error.message().c_str());
+		LOG_ERROR("bnf - HandleAccept error. fd: %d, handle: %d, error: %s", __acceptor.native(), GetHandle(), error.message().c_str());
 		DecRefCount();
 	}
 }
@@ -141,50 +141,50 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 void ListenSessionTcp::HandleClose()
 {
 	boost::system::error_code error;
-	acceptor_.close( error );
+	__acceptor.close( error );
 }
 
 void ListenSessionTcp::closeOnExecOn()
 {
-	int oldflags = fcntl (acceptor_.native(), F_GETFD, 0);
+	int oldflags = fcntl (__acceptor.native(), F_GETFD, 0);
 	if ( oldflags >= 0 )
 	{
-		fcntl( acceptor_.native(), F_SETFD, oldflags | FD_CLOEXEC );
+		fcntl( __acceptor.native(), F_SETFD, oldflags | FD_CLOEXEC );
 	}
 }
 
 void ListenSessionTcp::closeOnExecOff()
 {
-	int oldflags = fcntl (acceptor_.native(), F_GETFD, 0);
+	int oldflags = fcntl (__acceptor.native(), F_GETFD, 0);
 	if ( oldflags >= 0 )
 	{
-		fcntl( acceptor_.native(), F_SETFD, oldflags & ~FD_CLOEXEC );
+		fcntl( __acceptor.native(), F_SETFD, oldflags & ~FD_CLOEXEC );
 	}
 }
 
 void ListenSessionTcp::IncRefCount()
 {
-	boost::recursive_mutex::scoped_lock lock(ref_count_mutex_);
-	ref_count_++;
+	boost::recursive_mutex::scoped_lock lock(__ref_count_mutex);
+	__ref_count++;
 }
 
 void ListenSessionTcp::DecRefCount()
 {
-	tBOOL delete_flag = cFALSE;
+	bool delete_flag = false;
 
 	{
-		boost::recursive_mutex::scoped_lock lock(ref_count_mutex_);
-		ref_count_--;
+		boost::recursive_mutex::scoped_lock lock(__ref_count_mutex);
+		__ref_count--;
 
-		if( 0 == ref_count_ )
+		if( 0 == __ref_count )
 		{
-			LOG_INFO( "bnf - listen closed. fd: %d, handle: %d", acceptor_.native(), GetHandle() );
+			LOG_INFO( "bnf - listen closed. fd: %d, handle: %d", __acceptor.native(), GetHandle() );
 
-			delete_flag = cTRUE;
+			delete_flag = true;
 
 		}
 	}
 
-	if( delete_flag == cTRUE )
+	if( delete_flag == true )
 		bnf::instance()->RemoveSession( GetHandle() );
 }
