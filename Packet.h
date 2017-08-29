@@ -1,18 +1,15 @@
 #pragma once
 
 #include "MemoryPoolBase.h"
-#include "rntype.h"
 
-class SeedCipher;
-
-#define PACKET_HEADER_SIZE	(sizeof(rnPacket::Header))
+#define PACKET_HEADER_SIZE	(sizeof(Packet::Header))
 #define APPEND_PACKET_SIZE	(16)
 #define MAX_PACKET_MESSAGE	(10240)
 
-class rnPacket : public MemoryPoolBase<rnPacket>
+class Packet : public MemoryPoolBase<Packet>
 {
 public:
-	typedef boost::shared_ptr<rnPacket> SP;
+	typedef boost::shared_ptr<Packet> SP;
 
 public:
 	struct Header
@@ -23,12 +20,12 @@ public:
 	};
 
 public:
-	rnPacket(size_t size);
-	rnPacket();
-	~rnPacket();
+	Packet(size_t size);
+	Packet();
+	~Packet();
 
-	rnPacket* copy();
-	void copyHeader(rnPacket* base) { *_header = *base->_header; }
+	Packet* copy();
+	void copyHeader(Packet* base) { *_header = *base->_header; }
 
 	void reset();
 
@@ -62,7 +59,7 @@ public:
 	int32_t getSize() { return (int32_t)_header->size; }
 	size_t dataSize() { return (int32_t)_header->size - PACKET_HEADER_SIZE; }
 
-	rnPacket::Header* getHeader() { return _header; }
+	Packet::Header* getHeader() { return _header; }
 
 	uint8_t* data() { return _data; }
 
@@ -92,7 +89,7 @@ protected:
 };
 
 template<typename T>
-inline bool rnPacket::addVALUE(T& v)
+inline bool Packet::addVALUE(T& v)
 {
 	if (MAX_PACKET_MESSAGE < _header->size + sizeof(T))
 		return false;
@@ -104,7 +101,7 @@ inline bool rnPacket::addVALUE(T& v)
 }
 
 template<typename T>
-inline bool rnPacket::addVALUE(const T& v)
+inline bool Packet::addVALUE(const T& v)
 {
 	if (MAX_PACKET_MESSAGE < _header->size + sizeof(T))
 		return false;

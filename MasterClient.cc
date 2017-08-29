@@ -1,22 +1,22 @@
 #include "stdafx.h"
 
-#include "cmonitor.h"
+#include "MasterClient.h"
 #include "myhaSlave.h"
 
 #include "localresponse.h"
 #include "monitorresponse.h"
 
-CMonitor::CMonitor() :
+MasterClient::MasterClient() :
 	__service(NULL)
 {
 }
 
-CMonitor::~CMonitor()
+MasterClient::~MasterClient()
 {
 	__service = NULL;
 }
 
-bool CMonitor::init(rnSocketIOService* service, bool is_server_process_info)
+bool MasterClient::init(SocketIOService* service, bool is_server_process_info)
 {
 	__service = service;
 
@@ -31,24 +31,29 @@ bool CMonitor::init(rnSocketIOService* service, bool is_server_process_info)
 	return true;
 }
 
-void CMonitor::clear()
+void MasterClient::clear()
 {
+	LOG_TRACE("");
 	if (__service)
 	{
-		LOG_DEBUG("CMonitor delete %d", __service->GetHandle());
+		LOG_DEBUG("MasterClient delete %d", __service->GetHandle());
 	}
 
 	__service = NULL;
 
-	myhaSlave::connect_monitor_handle = bnf::instance()->CreateTimer(100, &myhaSlave::getTimerClass());
+	LOG_TRACE("로그인 서버와 끊어졌다 다시 붙이자");
+	myhaSlave::connect_monitor_handle = BNF::instance()->CreateTimer(100, &myhaSlave::getTimerClass());
 }
 
-void CMonitor::operate(rnSocketIOService* service)
+void MasterClient::operate(SocketIOService* service)
 {
-	rnPacket::SP packet(service->GetMessage());
+	LOG_TRACE("");
+	Packet::SP packet(service->GetMessage());
 	if (packet == NULL)
 	{
-		bnf::instance()->RemoveSession(service->GetHandle());
+		LOG_INFO("$$$ disconnect reason[%s] $$$", service->GetErrorMessage().c_str());
+		BNF::instance()->RemoveSession(service->GetHandle());
+		LOG_TRACE("");
 		clear();
 		return;
 	}
@@ -84,8 +89,6 @@ void CMonitor::operate(rnSocketIOService* service)
 		case PTYPE_LOCAL_SERVER_INFO:
 		{
 			__server_session_info = *((TServerInfo*)packet->data());
-
-			LOG_TRACE("Center::groupid()=[ %d ]", myhaSlave::getGroupID());
 
 			service->deliver(CLocalResponse::serverInfo(SERVER_TYPE_CENTER, myhaSlave::getGroupID(), 0));
 		}

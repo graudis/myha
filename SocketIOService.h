@@ -1,27 +1,27 @@
 #pragma once
 
-#include "rnsocketioserviceImpl.h"
+#include "SocketIOServiceImpl.h"
 #include "session_base.h"
 //#include "MemoryPoolBase.h"
 #include "queue_ts.h"
 
-#include "rnpacket.h"
+#include "Packet.h"
 
 class ListenSession;
 class ListenSessionTcp;
-class bnf;
+class BNF;
 
 
-class rnSocketIOService : public SessionBase, public rnSocketIOServiceImpl
+class SocketIOService : public SessionBase, public SocketIOServiceImpl
 {
 public:
 	friend class ListenSession;
 	friend class ListenSessionTcp;
-	friend class bnf;
+	friend class BNF;
 
 public:
-	rnSocketIOService(boost::asio::io_service& io_service, session_type type) : SessionBase(io_service, type) {};
-	virtual ~rnSocketIOService() {};
+	SocketIOService(boost::asio::io_service& io_service, session_type type) : SessionBase(io_service, type) {};
+	virtual ~SocketIOService() {};
 
 	virtual void Open(session_handle handle) = 0;
 	virtual void Open(session_handle handle, session_handle listen_handle, int waittimeout) = 0;
@@ -41,10 +41,10 @@ public:
 	virtual std::string& ip() = 0;
 	virtual unsigned int ipnumber() = 0;
 
-	virtual void deliver(rnPacket::SP packet) = 0;
-	virtual void deliver(rnPacket *pPacket) = 0;
+	virtual void deliver(Packet::SP packet) = 0;
+	virtual void deliver(Packet *pPacket) = 0;
 
-	virtual rnPacket* GetMessage() = 0;
+	virtual Packet* GetMessage() = 0;
 
 	virtual bool isValid() = 0;
 
@@ -66,9 +66,6 @@ public:
 	virtual void BroadcastOff() = 0;
 	virtual void NonBlockingIoOn() = 0;
 	virtual void NonBlockingIoOff() = 0;
-
-	virtual void IncRefCount() = 0;
-	virtual void DecRefCount() = 0;
 
 	virtual int32_t getWirteQueueCount() = 0;
 

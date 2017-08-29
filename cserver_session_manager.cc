@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "localannounce.h"
-#include "cmonitor.h"
+#include "MasterClient.h"
 #include "myhaSlave.h"
 
 #include "cserver_session_manager.h"
@@ -46,13 +46,13 @@ void CServerSessionManager::sendConnectionInfo(CServerSession* server_session, T
 	}
 }
 
-bool CServerSessionManager::deliver(int32_t type, rnPacket* packet)
+bool CServerSessionManager::deliver(int32_t type, Packet* packet)
 {
-	rnPacket::SP sp_packet(packet);
+	Packet::SP sp_packet(packet);
 	return deliver(type, sp_packet);
 }
 
-bool CServerSessionManager::deliver(int32_t type, rnPacket::SP packet)
+bool CServerSessionManager::deliver(int32_t type, Packet::SP packet)
 {
 	ServerSessionSet::iterator it = __session_set.begin();
 	ServerSessionSet::iterator end = __session_set.end();

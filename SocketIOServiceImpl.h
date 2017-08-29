@@ -3,14 +3,14 @@
 #include "session_base.h"
 #include "queue_ts.h"
 
-#include "rnpacket.h"
+#include "Packet.h"
 
-class rnSocketIOServiceImpl
+class SocketIOServiceImpl
 {
 public:
 public:
-	rnSocketIOServiceImpl() {};
-	virtual ~rnSocketIOServiceImpl() {};
+	SocketIOServiceImpl() {};
+	virtual ~SocketIOServiceImpl() {};
 
 	virtual void Open(session_handle handle) = 0;
 	virtual void Open(session_handle handle, session_handle listen_handle, int waittimeout) = 0;
@@ -30,10 +30,10 @@ public:
 	virtual std::string& ip() = 0;
 	virtual uint32_t ipnumber() = 0;
 
-	virtual void deliver(rnPacket::SP packet) = 0;
-	virtual void deliver(rnPacket *pPacket) = 0;
+	virtual void deliver(Packet::SP packet) = 0;
+	virtual void deliver(Packet *pPacket) = 0;
 
-	virtual rnPacket* GetMessage() = 0;
+	virtual Packet* GetMessage() = 0;
 
 	virtual bool isValid() = 0;
 
@@ -55,9 +55,6 @@ public:
 	virtual void BroadcastOff() = 0;
 	virtual void NonBlockingIoOn() = 0;
 	virtual void NonBlockingIoOff() = 0;
-
-	virtual void IncRefCount() = 0;
-	virtual void DecRefCount() = 0;
 
 	virtual int32_t getWirteQueueCount() = 0;
 

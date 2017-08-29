@@ -15,9 +15,9 @@ namespace MonitorResponse
 #pragma pack(pop)
 
 	// function
-	inline rnPacket* daemonStartAlert(int32_t group_id, uint8_t sort, uint16_t id, uint16_t channel_id, int32_t process_id, const char* service_ip)
+	inline Packet* daemonStartAlert(int32_t group_id, uint8_t sort, uint16_t id, uint16_t channel_id, int32_t process_id, const char* service_ip)
 	{
-		rnPacket* packet = new rnPacket(sizeof(TDaemonStartAlert));
+		Packet* packet = new Packet(sizeof(TDaemonStartAlert));
 
 		packet->setGroupType(PGROUP_MONITOR_RESPONSE, PTYPE_MONITOR_DAEMON_START_ALERT);
 		TDaemonStartAlert* data = reinterpret_cast<TDaemonStartAlert*>(packet->data());

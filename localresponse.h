@@ -7,9 +7,9 @@ namespace CLocalResponse
 #pragma pack(push, 1)
 #pragma pack(pop)
 
-	inline rnPacket* serverInfo(int32_t type, int32_t id, int32_t channel)
+	inline Packet* serverInfo(int32_t type, int32_t id, int32_t channel)
 	{
-		rnPacket* packet = new rnPacket(sizeof(TServerInfo));
+		Packet* packet = new Packet(sizeof(TServerInfo));
 
 		packet->setGroupType(PGROUP_LOCAL_RESPONSE, PTYPE_LOCAL_SERVER_INFO);
 		TServerInfo* data = reinterpret_cast<TServerInfo*>(packet->data());
@@ -21,9 +21,9 @@ namespace CLocalResponse
 		return packet;
 	}
 
-	inline rnPacket* listenInfo(int32_t for_type, const char* ip, int32_t port)
+	inline Packet* listenInfo(int32_t for_type, const char* ip, int32_t port)
 	{
-		rnPacket* packet = new rnPacket(sizeof(TListenInfo));
+		Packet* packet = new Packet(sizeof(TListenInfo));
 
 		packet->setGroupType(PGROUP_LOCAL_RESPONSE, PTYPE_LOCAL_CONNECTION_INFO);
 		TListenInfo* data = reinterpret_cast<TListenInfo*>(packet->data());

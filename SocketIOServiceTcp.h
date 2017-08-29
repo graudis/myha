@@ -1,25 +1,25 @@
 #pragma once
 
-#include "rnsocketioservice.h"
+#include "SocketIOService.h"
 #include "session_base.h"
 #include "MemoryPoolBase.h"
 #include "queue_ts.h"
 
-#include "rnpacket.h"
+#include "Packet.h"
 
 class ListenSessionTcp;
-class bnf;
+class BNF;
 
 
-class rnSocketIOServiceTcp : public rnSocketIOService, public MemoryPoolBase<rnSocketIOServiceTcp>
+class SocketIOServiceTcp : public SocketIOService, public MemoryPoolBase<SocketIOServiceTcp>
 {
 public:
 	friend class ListenSessionTcp;
-	friend class bnf;
+	friend class BNF;
 
 public:
-	rnSocketIOServiceTcp(boost::asio::io_service& io_service);
-	virtual ~rnSocketIOServiceTcp();
+	SocketIOServiceTcp(boost::asio::io_service& io_service);
+	virtual ~SocketIOServiceTcp();
 
 	virtual void Open(session_handle handle);
 	virtual void Open(session_handle handle, session_handle listen_handle, int waittimeout);
@@ -39,10 +39,10 @@ public:
 	virtual std::string& ip();
 	virtual uint32_t ipnumber();
 
-	virtual void deliver(rnPacket::SP packet);
-	virtual void deliver(rnPacket *pPacket) { deliver(rnPacket::SP(pPacket)); }
+	virtual void deliver(Packet::SP packet);
+	virtual void deliver(Packet *pPacket) { deliver(Packet::SP(pPacket)); }
 
-	virtual rnPacket* GetMessage() { return __read_queue.front_pop(); }
+	virtual Packet* GetMessage() { return __read_queue.front_pop(); }
 
 	virtual bool isValid() { return (_handle != INVALID_SESSION_HANDLE && __socket.is_open()); }
 
@@ -64,9 +64,6 @@ public:
 	virtual void BroadcastOff();
 	virtual void NonBlockingIoOn();
 	virtual void NonBlockingIoOff();
-
-	virtual void IncRefCount();
-	virtual void DecRefCount();
 
 	virtual int32_t getWirteQueueCount() { return __write_queue.size(); }
 
@@ -103,16 +100,12 @@ private:
 	volatile bool __close_flag;
 	session_handle __listen_session_handle;
 
-	rnPacket* __now_packet;
-	queue_ts<rnPacket*> __read_queue;
-	std::deque<rnPacket::SP> __write_queue;
-	boost::recursive_mutex __write_queue_mutex;
-
-	boost::recursive_mutex __close_mutex;
-
-	boost::recursive_mutex __ref_count_mutex;
-	int32_t __ref_count;
+	Packet* __now_packet;
+	queue_ts<Packet*> __read_queue;
+	std::deque<Packet::SP> __write_queue;
 
 	bool __timeout;
 	boost::system::error_code __read_error_code;
+
+	boost::asio::strand boost_strand_;
 };

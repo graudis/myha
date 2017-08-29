@@ -25,7 +25,7 @@ CServerSession::~CServerSession()
 	LOG_INFO("delete CServerSession. type: %d - %s, id: %d, channel: %d", getType(), getServerName(getType()), getId(), getChannel());
 }
 
-bool CServerSession::packetHandler(rnPacket::SP& packet)
+bool CServerSession::packetHandler(Packet::SP& packet)
 {
 	return false;
 }
@@ -56,12 +56,12 @@ void CServerSession::sendConnectionInfo(CServerSession* server_session, TListenI
 	}
 }
 
-void CServerSession::deliver(rnPacket::SP& packet)
+void CServerSession::deliver(Packet::SP& packet)
 {
 	__center->deliver(packet);
 }
 
-void CServerSession::deliver(rnPacket* packet)
+void CServerSession::deliver(Packet* packet)
 {
 	__center->deliver(packet);
 }

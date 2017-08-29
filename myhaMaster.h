@@ -2,17 +2,17 @@
 
 #include "type.h"
 #include "status.h"
-#include "mcenteraccept.h"
+#include "MasterClientAccept.h"
 
 #include "Config_INI.h"
 
-class TimerClass : public rnSocketIOHandler
+class TimerClass : public SocketIOHandler
 {
 public:
 	TimerClass() {}
 	~TimerClass() {}
 
-	void operate(rnSocketIOService* service);
+	void operate(SocketIOService* service);
 };
 
 class myhaMaster
@@ -24,8 +24,7 @@ public:
 	static bool config();
 	static bool run();
 
-	static void processTimerSession(TimerSession* PSession);
-
+	static void processTimerSession(TimerSession* session);
 	static TimerClass& getTimerClass() { return timer_class; }
 
 public:

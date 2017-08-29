@@ -1,3 +1,3 @@
 #pragma once
 
-#define MONITOR_FOR_CENTER (11001)
+#define MASTER_FOR_SLAVE (11001)

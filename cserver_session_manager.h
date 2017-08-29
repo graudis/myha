@@ -17,8 +17,8 @@ public:
 	void sendConnectionInfo(CServerSession* server_session);
 	void sendConnectionInfo(CServerSession* server_session, TListenInfo* listen_info);
 
-	bool deliver(int32_t type, rnPacket* packet);
-	bool deliver(int32_t type, rnPacket::SP packet);
+	bool deliver(int32_t type, Packet* packet);
+	bool deliver(int32_t type, Packet::SP packet);
 
 	int32_t getSessionCount(int32_t type);
 

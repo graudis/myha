@@ -4,11 +4,11 @@
 #include <assert.h>
 
 #include "type.h"
-#include "rnpacket.h"
-#include "logsystem.h"
+#include "LogSystem.h"
 
+#include "Packet.h"
 
-rnPacket::rnPacket(size_t size) : _rcount(0)
+Packet::Packet(size_t size) : _rcount(0)
 {
 	_header = reinterpret_cast<Header*>(_buffer);
 	_data = _buffer + PACKET_HEADER_SIZE;
@@ -18,91 +18,91 @@ rnPacket::rnPacket(size_t size) : _rcount(0)
 	_header->type = 0;
 }
 
-rnPacket::rnPacket() : _rcount(0)
+Packet::Packet() : _rcount(0)
 {
 	_header = reinterpret_cast<Header*>(_buffer);
 	_data = _buffer + PACKET_HEADER_SIZE;
 }
 
-rnPacket::~rnPacket()
+Packet::~Packet()
 {
 }
 
-rnPacket* rnPacket::copy()
+Packet* Packet::copy()
 {
-	rnPacket* clone = new rnPacket(_header->size);
+	Packet* clone = new Packet(_header->size);
 	memcpy(clone->_buffer, _buffer, _header->size);
 	return clone;
 }
 
-void rnPacket::addBYTE(uint8_t v)
+void Packet::addBYTE(uint8_t v)
 {
 	*(_buffer + _header->size) = v;
 	_header->size += sizeof(uint8_t);
 }
 
-void rnPacket::addBYTE(uint8_t *v, size_t count)
+void Packet::addBYTE(uint8_t *v, size_t count)
 {
 	size_t size = sizeof(uint8_t) * count;
 	memcpy(_buffer + _header->size, v, size);
 	_header->size += size;
 }
 
-void rnPacket::addBOOL(bool v)
+void Packet::addBOOL(bool v)
 {
 	*(_buffer + _header->size) = v;
 	_header->size += sizeof(bool);
 }
 
-void rnPacket::addSINT(int16_t v)
+void Packet::addSINT(int16_t v)
 {
 	*((int16_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(int16_t);
 }
 
-void rnPacket::addUSINT(uint16_t v)
+void Packet::addUSINT(uint16_t v)
 {
 	*((uint16_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(uint16_t);
 }
 
-void rnPacket::addINT(int32_t v)
+void Packet::addINT(int32_t v)
 {
 	*((int32_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(int32_t);
 }
 
-void rnPacket::addUINT(uint32_t v)
+void Packet::addUINT(uint32_t v)
 {
 	*((uint32_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(uint32_t);
 }
 
-void rnPacket::addLONG(int32_t v)
+void Packet::addLONG(int32_t v)
 {
 	*((int32_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(int32_t);
 }
 
-void rnPacket::addULONG(uint32_t v)
+void Packet::addULONG(uint32_t v)
 {
 	*((uint32_t*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(uint32_t);
 }
 
-void rnPacket::addFLOAT(float v)
+void Packet::addFLOAT(float v)
 {
 	*((float*)(_buffer + _header->size)) = v;
 	_header->size += sizeof(float);
 }
 
-void rnPacket::addVALUE(const uint8_t *v, size_t count)
+void Packet::addVALUE(const uint8_t *v, size_t count)
 {
 	memcpy(_buffer + _header->size, v, count);
 	_header->size += count;
 }
 
-bool rnPacket::getBYTE(uint8_t &rt)
+bool Packet::getBYTE(uint8_t &rt)
 {
 	if (_rcount + sizeof(uint8_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -114,7 +114,7 @@ bool rnPacket::getBYTE(uint8_t &rt)
 	return true;
 }
 
-bool rnPacket::getBOOL(bool &rt)
+bool Packet::getBOOL(bool &rt)
 {
 	if (_rcount + sizeof(bool) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -125,7 +125,7 @@ bool rnPacket::getBOOL(bool &rt)
 	return true;
 }
 
-bool rnPacket::getSINT(int16_t &rt)
+bool Packet::getSINT(int16_t &rt)
 {
 	if (_rcount + sizeof(int16_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -136,7 +136,7 @@ bool rnPacket::getSINT(int16_t &rt)
 	return true;
 }
 
-bool rnPacket::getUSINT(uint16_t &rt)
+bool Packet::getUSINT(uint16_t &rt)
 {
 	if (_rcount + sizeof(uint16_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -147,7 +147,7 @@ bool rnPacket::getUSINT(uint16_t &rt)
 	return true;
 }
 
-bool rnPacket::getINT(int32_t &rt)
+bool Packet::getINT(int32_t &rt)
 {
 	if (_rcount + sizeof(int32_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -158,7 +158,7 @@ bool rnPacket::getINT(int32_t &rt)
 	return true;
 }
 
-bool rnPacket::getUINT(uint32_t &rt)
+bool Packet::getUINT(uint32_t &rt)
 {
 	if (_rcount + sizeof(uint32_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -169,7 +169,7 @@ bool rnPacket::getUINT(uint32_t &rt)
 	return true;
 }
 
-bool rnPacket::getLONG(int32_t &rt)
+bool Packet::getLONG(int32_t &rt)
 {
 	if (_rcount + sizeof(int32_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -180,7 +180,7 @@ bool rnPacket::getLONG(int32_t &rt)
 	return true;
 }
 
-bool rnPacket::getULONG(uint32_t &rt)
+bool Packet::getULONG(uint32_t &rt)
 {
 	if (_rcount + sizeof(uint32_t) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -191,7 +191,7 @@ bool rnPacket::getULONG(uint32_t &rt)
 	return true;
 }
 
-bool rnPacket::getFLOAT(float &rt)
+bool Packet::getFLOAT(float &rt)
 {
 	if (_rcount + sizeof(float) >= MAX_PACKET_MESSAGE)
 		return false;
@@ -202,7 +202,7 @@ bool rnPacket::getFLOAT(float &rt)
 	return true;
 }
 
-bool rnPacket::getVALUE(uint8_t *v, int32_t count)
+bool Packet::getVALUE(uint8_t *v, int32_t count)
 {
 	if (_rcount + count >= MAX_PACKET_MESSAGE)
 		return false;
@@ -213,7 +213,7 @@ bool rnPacket::getVALUE(uint8_t *v, int32_t count)
 	return true;
 }
 
-void rnPacket::reset()
+void Packet::reset()
 {
 	_header->size = PACKET_HEADER_SIZE;
 	_header->group = 0;
@@ -222,7 +222,7 @@ void rnPacket::reset()
 	_rcount = 0;
 }
 
-void rnPacket::dumpSimple()
+void Packet::dumpSimple()
 {
 	std::string packet_group[PGROUP_MAX_ + 1] =
 	{
@@ -239,7 +239,7 @@ void rnPacket::dumpSimple()
 		_header->group, packet_group[_header->group].c_str(), _header->type, _header->size);
 }
 
-void rnPacket::dump()
+void Packet::dump()
 {
 	LOG_DEBUG("packet dump. size: %d, group: %d, type: %d",
 		_header->size, _header->group, _header->type);

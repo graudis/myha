@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 // CCenter
-CCenter::CCenter(rnSocketIOService* service) : __service(service)
+CCenter::CCenter(SocketIOService* service) : __service(service)
 {
 	__server_session = NULL;
 }
@@ -20,9 +20,9 @@ CCenter::~CCenter()
 {
 }
 
-void CCenter::operate(rnSocketIOService* service)
+void CCenter::operate(SocketIOService* service)
 {
-	rnPacket::SP packet(service->GetMessage());
+	Packet::SP packet(service->GetMessage());
 	if (packet == NULL)
 	{
 		if (__server_session != NULL)
@@ -31,7 +31,7 @@ void CCenter::operate(rnSocketIOService* service)
 			delete __server_session;
 		}
 
-		bnf::instance()->RemoveSession(service->GetHandle());
+		BNF::instance()->RemoveSession(service->GetHandle());
 		delete this;
 		return;
 	}
@@ -47,7 +47,7 @@ void CCenter::operate(rnSocketIOService* service)
 		__server_session->packetHandler(packet);
 }
 
-void CCenter::handleLocalResponse(rnPacket::SP& packet)
+void CCenter::handleLocalResponse(Packet::SP& packet)
 {
 	switch (packet->getType())
 	{
@@ -93,14 +93,14 @@ void CCenter::handleLocalResponse(rnPacket::SP& packet)
 	}
 }
 
-void CCenter::deliver(rnPacket::SP& packet)
+void CCenter::deliver(Packet::SP& packet)
 {
 	if (__service != NULL)
 		__service->deliver(packet);
 }
 
-void CCenter::deliver(rnPacket* packet)
+void CCenter::deliver(Packet* packet)
 {
-	rnPacket::SP sp_packet(packet);
+	Packet::SP sp_packet(packet);
 	deliver(sp_packet);
 }

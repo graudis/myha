@@ -5,7 +5,6 @@
 #include "Config_INI.h"
 
 #include "ccenter.h"
-#include "ccenter_accept.h"
 
 #include "ProcessCheck.h"
 
@@ -17,15 +16,15 @@ session_handle			myhaSlave::update_timer = SessionBase::INVALID_SESSION_HANDLE;
 
 
 CServerSessionManager	myhaSlave::__server_session_manager;
-CCenterAccept			myhaSlave::__center_accept;
-CMonitor				myhaSlave::__monitor;
+MasterClient			myhaSlave::__master_client;
 TimerClass2				myhaSlave::timer_class;
 time_t					myhaSlave::__global_time;
 int32_t					myhaSlave::__connect_flag;
 bool					myhaSlave::__server_init = false;
 
-void TimerClass2::operate(rnSocketIOService* service)
+void TimerClass2::operate(SocketIOService* service)
 {
+	LOG_TRACE("");
 	myhaSlave::processTimerSession((TimerSession*)service);
 }
 
@@ -44,23 +43,23 @@ bool myhaSlave::initService()
 {
 	session_handle shandle;
 
-	shandle = bnf::instance()->CreateConnect(Config::INI::Instance()->getMasterIP().c_str(), MONITOR_FOR_CENTER, &__monitor);
+	shandle = BNF::instance()->CreateConnect(Config::INI::Instance()->getMasterIP().c_str(), MASTER_FOR_SLAVE, &__master_client);
 	if (shandle == SessionBase::INVALID_SESSION_HANDLE)
 	{
-		LOG_ERROR("Can't connect monitor server. Host=[ '%s:%d' ]", Config::INI::Instance()->getMasterIP().c_str(), MONITOR_FOR_CENTER);
+		LOG_ERROR("Can't connect monitor server. Host=[ '%s:%d' ]", Config::INI::Instance()->getMasterIP().c_str(), MASTER_FOR_SLAVE);
 		return false;
 	}
-	rnSocketIOService *mService = (rnSocketIOService*)bnf::instance()->GetSessionPointer(shandle);
-	__monitor.init(mService);
+	SocketIOService* service = (SocketIOService*)BNF::instance()->GetSessionPointer(shandle);
+	__master_client.init(service);
 
-	update_timer = bnf::instance()->CreateTimer(1000, &timer_class);
+	update_timer = BNF::instance()->CreateTimer(1000, &timer_class);
 
 	return true;
 }
 
 bool myhaSlave::run()
 {
-	bnf::instance()->Init();
+	BNF::instance()->Init();
 
 	LOG_DEBUG("start service center(%d)", __group_id);
 	printf(">>>> start service center(%d)\n", __group_id);
@@ -71,9 +70,9 @@ bool myhaSlave::run()
 	LOG_DEBUG("DO2 CENTER SERVER ..... OK (with boost_%s)", BOOST_LIB_VERSION);
 	printf("\t\t>>>> DO2 CENTER SERVER ..... OK (with boost_%s)\n", BOOST_LIB_VERSION);
 
-	bnf::instance()->Run();
+	BNF::instance()->Run();
 
-	bnf::instance()->Clear();
+	BNF::instance()->Clear();
 
 	LOG_DEBUG("end service center(%d)", __group_id);
 	printf(">>>> end service center(%d)\n", __group_id);
@@ -90,7 +89,7 @@ void myhaSlave::Stop()
 {
 	endService();
 
-	bnf::instance()->Stop();
+	BNF::instance()->Stop();
 }
 
 void myhaSlave::setConnectFlag(int32_t flag)
@@ -99,7 +98,6 @@ void myhaSlave::setConnectFlag(int32_t flag)
 
 	if (__connect_flag == CONNECTED_SERVER_ALL)
 		__connect_flag = INIT_SERVER_COMPLETED;
-
 }
 
 bool myhaSlave::endService()
@@ -116,7 +114,7 @@ void myhaSlave::processTimerSession(TimerSession* pSession)
 		bool tcp_check = TCPPortCheck(Config::INI::Instance()->getSlaveIP(), port);
 		bool proc_check = ProcessCheck();
 
-		// 		if (&monitor_ != NULL)
+		if (__master_client.service()->isValid() == true)
 		{
 			bool status = false;
 			if (tcp_check == true && proc_check == true)
@@ -124,8 +122,18 @@ void myhaSlave::processTimerSession(TimerSession* pSession)
 
 			LOG_TRACE("Slave is %s.", (status == true) ? "OK" : "NOT OK");
 
-			__monitor.deliver(MonitorAnnounce::ProcessStatus(2, status));
+			__master_client.deliver(MonitorAnnounce::ProcessStatus(2, status));
 		}
+	}
+	else if (pSession->GetHandle() == connect_monitor_handle)
+	{
+		LOG_TRACE("--------------------------------------------------------------------------------");
+// 		session_handle shandle = BNF::instance()->CreateConnect(Config::INI::Instance()->getMasterIP().c_str(), MASTER_FOR_SLAVE, &__master_client);
+// 		if (shandle != SessionBase::INVALID_SESSION_HANDLE)
+// 		{
+// 			SocketIOService* service = (SocketIOService*)BNF::instance()->GetSessionPointer(shandle);
+// 			__master_client.init(service);
+// 		}
 	}
 }
 

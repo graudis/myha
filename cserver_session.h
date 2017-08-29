@@ -10,7 +10,7 @@ public:
 	CServerSession(CCenter* center, TServerInfo* server_info);
 	virtual ~CServerSession();
 
-	virtual bool packetHandler(rnPacket::SP& packet);
+	virtual bool packetHandler(Packet::SP& packet);
 
 	void addConnectionInfo(TListenInfo* connection_info);
 
@@ -22,8 +22,8 @@ public:
 	int32_t getId() { return __server_session_info.id; }
 	int32_t getChannel() { return __server_session_info.channel; }
 
-	void deliver(rnPacket::SP& packet);
-	void deliver(rnPacket* packet);
+	void deliver(Packet::SP& packet);
+	void deliver(Packet* packet);
 
 	const char* getIp();
 

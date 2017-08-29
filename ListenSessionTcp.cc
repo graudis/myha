@@ -1,26 +1,24 @@
-#include "bnf.h"
+#include "BNF.h"
 
-#include "logsystem.h"
+#include "LogSystem.h"
 
-#include "listen_sessionTcp.h"
+#include "ListenSessionTcp.h"
 
-#include "listen_sessionTcp.h"
-
-ListenSessionTcp::ListenSessionTcp( boost::asio::io_service& io_service, int waittimeout ) :
+ListenSessionTcp::ListenSessionTcp(boost::asio::io_service& io_service, int waittimeout) :
 	ListenSession(io_service, SessionBase::LISTEN_SESSION),
-	__acceptor( io_service ),
-	__session_wait_time( waittimeout ),
-	__ref_count( 0 )
+	__acceptor(io_service),
+	__session_wait_time(waittimeout),
+	__ref_count(0)
 {
-	bnf::instance()->__tcp_listen_session_seq.pop(_handle);
+	BNF::instance()->__tcp_listen_session_seq.pop(_handle);
 }
 
 ListenSessionTcp::~ListenSessionTcp()
 {
-	bnf::instance()->__tcp_listen_session_seq.push(_handle);
+	BNF::instance()->__tcp_listen_session_seq.push(_handle);
 }
 
-bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
+bool ListenSessionTcp::Run(std::string& host, const int port, SocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
 {
 	std::ostringstream oss;
 	oss << port;
@@ -67,18 +65,18 @@ bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler*
 	__function = func;
 
 	session_handle shandle;
-	if (bnf::instance()->__tcp_session_seq.pop(shandle) == false)
+	if (BNF::instance()->__tcp_session_seq.pop(shandle) == false)
 	{
-		bnf::instance()->growSessionBuffer();
+		BNF::instance()->growSessionBuffer();
 		LOG_INFO("session buffer growing.");
 	}
 
-	rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)&bnf::instance()->__tcp_session_buf[shandle];
+	SocketIOServiceTcp* pSession = (SocketIOServiceTcp*)&BNF::instance()->__tcp_session_buf[shandle];
 	pSession->Open(shandle, _handle, __session_wait_time);
 
 	IncRefCount();
 	__acceptor.async_accept(pSession->Socket(),
-			boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
+		boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
 
 	LOG_INFO("bnf - open listen socket. fd: %d, handle: %d", __acceptor.native(), GetHandle());
 
@@ -87,22 +85,21 @@ bool ListenSessionTcp::Run(std::string& host, const int port, rnSocketIOHandler*
 
 void ListenSessionTcp::Close()
 {
-	_io_service.post( boost::bind( &ListenSessionTcp::HandleClose, this ) );
+	_io_service.post(boost::bind(&ListenSessionTcp::HandleClose, this));
 }
 
-void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const boost::system::error_code& error)
+void ListenSessionTcp::HandleAccept(SocketIOService* pSessionService, const boost::system::error_code& error)
 {
 	if (!error)
 	{
-		rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)pSessionService;
+		SocketIOServiceTcp* pSession = (SocketIOServiceTcp*)pSessionService;
 
 		pSession->_getIp();
-		pSession->IncRefCount();
 
 		// event
 		__function->operate(pSession);
 
-		bnf::instance()->__tcp_session_list.insert(pSession->GetHandle(), pSession);
+		BNF::instance()->__tcp_session_list.insert(pSession->GetHandle(), pSession);
 		pSession->Run();
 
 		LOG_INFO("bnf [%s] - accepted. fd: %d, handle: %d", pSession->ip().c_str(), pSession->Socket().native(), pSession->GetHandle());
@@ -111,25 +108,25 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 
 		while (1)
 		{
-			if (bnf::instance()->__tcp_session_seq.pop(shandle) == false)
+			if (BNF::instance()->__tcp_session_seq.pop(shandle) == false)
 			{
-				bnf::instance()->growSessionBuffer();
+				BNF::instance()->growSessionBuffer();
 				LOG_INFO("session buffer growing.");
 			}
 
-			pSession = (rnSocketIOServiceTcp*)&bnf::instance()->__tcp_session_buf[shandle];
-			if (((rnSocketIOServiceTcp*)pSession)->Socket().is_open() == false)
+			pSession = (SocketIOServiceTcp*)&BNF::instance()->__tcp_session_buf[shandle];
+			if (((SocketIOServiceTcp*)pSession)->Socket().is_open() == false)
 			{
 				break;
 			}
 
-			LOG_INFO("bnf - skip rnSocketIOService. handle: %d, fd: %d", pSession->GetHandle(), pSession->Socket().native());
+			LOG_INFO("bnf - skip SocketIOService. handle: %d, fd: %d", pSession->GetHandle(), pSession->Socket().native());
 		}
 
 
 		pSession->Open(shandle, _handle, __session_wait_time);
 		__acceptor.async_accept(pSession->Socket(),
-				boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
+			boost::bind(&ListenSessionTcp::HandleAccept, this, pSession, boost::asio::placeholders::error));
 	}
 	else
 	{
@@ -141,24 +138,24 @@ void ListenSessionTcp::HandleAccept(rnSocketIOService* pSessionService, const bo
 void ListenSessionTcp::HandleClose()
 {
 	boost::system::error_code error;
-	__acceptor.close( error );
+	__acceptor.close(error);
 }
 
 void ListenSessionTcp::closeOnExecOn()
 {
-	int oldflags = fcntl (__acceptor.native(), F_GETFD, 0);
-	if ( oldflags >= 0 )
+	int oldflags = fcntl(__acceptor.native(), F_GETFD, 0);
+	if (oldflags >= 0)
 	{
-		fcntl( __acceptor.native(), F_SETFD, oldflags | FD_CLOEXEC );
+		fcntl(__acceptor.native(), F_SETFD, oldflags | FD_CLOEXEC);
 	}
 }
 
 void ListenSessionTcp::closeOnExecOff()
 {
-	int oldflags = fcntl (__acceptor.native(), F_GETFD, 0);
-	if ( oldflags >= 0 )
+	int oldflags = fcntl(__acceptor.native(), F_GETFD, 0);
+	if (oldflags >= 0)
 	{
-		fcntl( __acceptor.native(), F_SETFD, oldflags & ~FD_CLOEXEC );
+		fcntl(__acceptor.native(), F_SETFD, oldflags & ~FD_CLOEXEC);
 	}
 }
 
@@ -176,15 +173,15 @@ void ListenSessionTcp::DecRefCount()
 		boost::recursive_mutex::scoped_lock lock(__ref_count_mutex);
 		__ref_count--;
 
-		if( 0 == __ref_count )
+		if (0 == __ref_count)
 		{
-			LOG_INFO( "bnf - listen closed. fd: %d, handle: %d", __acceptor.native(), GetHandle() );
+			LOG_INFO("bnf - listen closed. fd: %d, handle: %d", __acceptor.native(), GetHandle());
 
 			delete_flag = true;
 
 		}
 	}
 
-	if( delete_flag == true )
-		bnf::instance()->RemoveSession( GetHandle() );
+	if (delete_flag == true)
+		BNF::instance()->RemoveSession(GetHandle());
 }

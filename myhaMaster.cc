@@ -2,20 +2,21 @@
 
 #include "Config_INI.h"
 
-#include "logsystem.h"
+#include "LogSystem.h"
 
 #include "localrequest.h"
-#include "mcenterservice.h"
+#include "MasterClientService.h"
 #include "myhaMaster.h"
 #include "network_util.h"
 
 #include "ProcessCheck.h"
 
-session_handle		myhaMaster::server_command_handle = SessionBase::INVALID_SESSION_HANDLE;
-TimerClass			myhaMaster::timer_class;
+session_handle myhaMaster::server_command_handle = SessionBase::INVALID_SESSION_HANDLE;
+TimerClass myhaMaster::timer_class;
 
-void TimerClass::operate(rnSocketIOService* service)
+void TimerClass::operate(SocketIOService* service)
 {
+	LOG_TRACE("");
 	myhaMaster::processTimerSession((TimerSession*)service);
 }
 
@@ -26,19 +27,19 @@ bool myhaMaster::config()
 
 bool myhaMaster::init()
 {
-	bnf::instance()->Init();
+	BNF::instance()->Init();
 
 	session_handle handle;
 
-	handle = bnf::instance()->CreateListen(getServiceIP(), MONITOR_FOR_CENTER, 0, MCenterAccept::instance());
+	handle = BNF::instance()->CreateListen(getServiceIP(), MASTER_FOR_SLAVE, 0, MasterClientAccept::instance());
 	if (handle == SessionBase::INVALID_SESSION_HANDLE)
 	{
-		LOG_ERROR("Can't create listen service['%s:%d'] for center.", getServiceIP(), MONITOR_FOR_CENTER);
-		printf("[%s:%d	%s]	Can't create listen service['%s:%d'] for center.\n", __FILE__, __LINE__, __FUNCTION__,	getServiceIP(), MONITOR_FOR_CENTER);
+		LOG_ERROR("Can't create listen service['%s:%d'] for center.", getServiceIP(), MASTER_FOR_SLAVE);
+		printf("[%s:%d	%s]	Can't create listen service['%s:%d'] for center.\n", __FILE__, __LINE__, __FUNCTION__, getServiceIP(), MASTER_FOR_SLAVE);
 		return false;
 	}
 
-	myhaMaster::server_command_handle = bnf::instance()->CreateTimer(1000, &timer_class);
+	myhaMaster::server_command_handle = BNF::instance()->CreateTimer(1000, &timer_class);
 
 	return true;
 }
@@ -47,16 +48,16 @@ bool myhaMaster::run()
 {
 	if (init() == false)
 	{
-		bnf::instance()->Clear();
+		BNF::instance()->Clear();
 		return false;
 	}
 
 	printf(">>>> start service Monitor(%s)\n", getServiceIP());
 	printf(">>>> run service Monitor(%s)\n", getServiceIP());
 
-	bnf::instance()->Run();
+	BNF::instance()->Run();
 
-	bnf::instance()->Clear();
+	BNF::instance()->Clear();
 
 	printf(">>>> end service Monitor(%s)\n", getServiceIP());
 
@@ -67,9 +68,9 @@ void myhaMaster::end()
 {
 }
 
-void myhaMaster::processTimerSession( TimerSession* PSession )
+void myhaMaster::processTimerSession(TimerSession* session)
 {
-	if (PSession->GetHandle() == myhaMaster::server_command_handle)
+	if (session->GetHandle() == myhaMaster::server_command_handle)
 	{
 		uint16_t port = 3306;
 
@@ -80,9 +81,9 @@ void myhaMaster::processTimerSession( TimerSession* PSession )
 		if (tcp_check == true && proc_check == true)
 			status = true;
 
-		LOG_TRACE("Master is %s.", (status == true) ? "OK" :"NOT OK");
+		LOG_TRACE("Master is %s.", (status == true) ? "OK" : "NOT OK");
 
-		MCenterService* center = MCenterAccept::instance()->lookup(1);
+		MasterClientService* center = MasterClientAccept::instance()->lookup(1);
 		if (center != NULL)
 		{
 			center->deliver(MonitorAnnounce::ProcessStatus(1, status));

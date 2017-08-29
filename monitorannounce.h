@@ -12,9 +12,9 @@ namespace MonitorAnnounce
 #pragma pack(pop)
 
 	// function
-	inline rnPacket* ProcessStatus(int32_t mode, bool status)
+	inline Packet* ProcessStatus(int32_t mode, bool status)
 	{
-		rnPacket* packet = new rnPacket(sizeof(TProcessStatus));
+		Packet* packet = new Packet(sizeof(TProcessStatus));
 		packet->setGroupType(PGROUP_MONITOR_ANNOUNCE, PTYPE_MONITOR_Process_Status);
 		TProcessStatus* data = reinterpret_cast<TProcessStatus*>(packet->data());
 		data->mode = mode;

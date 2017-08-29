@@ -4,7 +4,7 @@
 #include <string.h>
 #include <string>
 
-#include "rntype.h"
+#include "type.h"
 #include "boostcommon.h"
 
 //////////////////////////////////////////////////////////////////////////

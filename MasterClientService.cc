@@ -1,28 +1,30 @@
 #include "stdafx.h"
 
 #include "localresponse.h"
-#include "mcenterservice.h"
 
 #include "myhaMaster.h"
 
-MCenterService::MCenterService(rnSocketIOService* service) :
+#include "MasterClientService.h"
+
+MasterClientService::MasterClientService(SocketIOService* service) :
 	__service(service)
 {
 	__login_limit = 0;
 }
 
-MCenterService::~MCenterService()
+MasterClientService::~MasterClientService()
 {
 	__service = NULL;
 }
 
-void MCenterService::operate(rnSocketIOService* service)
+void MasterClientService::operate(SocketIOService* service)
 {
-	rnPacket::SP packet(service->GetMessage());
+	LOG_TRACE("");
+	Packet::SP packet(service->GetMessage());
 	if (packet == NULL)
 	{
-		bnf::instance()->RemoveSession(service->GetHandle());
-		MCenterAccept::instance()->deleteService(this);
+		BNF::instance()->RemoveSession(service->GetHandle());
+		MasterClientAccept::instance()->deleteService(this);
 
 		delete this;
 		return;
@@ -40,9 +42,9 @@ void MCenterService::operate(rnSocketIOService* service)
 
 			LOG_TRACE("server_session_info_.id_=[ %d ]", __server_session_info.id);
 
-			MCenterAccept::instance()->createService((int16_t)__server_session_info.id, this);
+			MasterClientAccept::instance()->createService((int16_t)__server_session_info.id, this);
 
-			// rnPacket::SP sp_packet = rnPacket::SP ( MonitorRequest::realtimeEventUpdate( server_session_info_.id_ ) );
+			// Packet::SP sp_packet = Packet::SP ( MonitorRequest::realtimeEventUpdate( server_session_info_.id_ ) );
 			// MServerCommandManager::push_rnpacket_data( sp_packet );
 		}
 		break;
@@ -64,7 +66,7 @@ void MCenterService::operate(rnSocketIOService* service)
 
 			if (data->sort == SERVER_TYPE_CENTER)
 			{
-				MCenterService* service = MCenterAccept::instance()->lookup(data->group_id);
+				MasterClientService* service = MasterClientAccept::instance()->lookup(data->group_id);
 				if (service != NULL)
 				{
 					setGroupID(data->group_id);
@@ -119,7 +121,31 @@ void MCenterService::operate(rnSocketIOService* service)
 	}
 }
 
-void MCenterService::setGroupID(int32_t group_id)
+bool MasterClientService::deliver(Packet* packet)
+{
+	if (__service == NULL)
+	{
+		LOG_TRACE("__service == NULL");
+		return false;
+	}
+
+	return deliver(Packet::SP(packet));
+}
+
+bool MasterClientService::deliver(Packet::SP packet)
+{
+	if (__service == NULL)
+	{
+		LOG_TRACE("__service == NULL");
+		return false;
+	}
+
+	__service->deliver(packet);
+
+	return true;
+}
+
+void MasterClientService::setGroupID(int32_t group_id)
 {
 	__group_id = group_id;
 	__login_limit = 10;

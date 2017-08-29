@@ -41,7 +41,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
 
-#include "rntype.h"
+#include "type.h"
 
 #define UNORDERED_MAP boost::unordered_map
 #define UNORDERED_SET boost::unordered_set

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "logsystem.h"
+#include "LogSystem.h"
 
 DEFINE_SINGLETON(LogSystem);
 
@@ -129,7 +129,7 @@ void CLogBuffer::reset()
 }
 
 /*
-#include "logsystem.h"
+#include "LogSystem.h"
 
 CLogger		myLogger( "spooky000" );
 

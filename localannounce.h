@@ -4,9 +4,9 @@
 
 namespace CLocalAnnounce
 {
-	inline rnPacket* connectionInfo(int32_t for_type, int32_t id, int32_t channel, char* ip, int32_t port)
+	inline Packet* connectionInfo(int32_t for_type, int32_t id, int32_t channel, char* ip, int32_t port)
 	{
-		rnPacket* packet = new rnPacket(sizeof(TConnectionInfo));
+		Packet* packet = new Packet(sizeof(TConnectionInfo));
 
 		packet->setGroupType(PGROUP_LOCAL_ANNOUNCE, PTYPE_LOCAL_CONNECTION_INFO);
 		TConnectionInfo* data = reinterpret_cast<TConnectionInfo*>(packet->data());

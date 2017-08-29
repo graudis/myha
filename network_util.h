@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rntype.h"
+#include "type.h"
 
 bool getLocalIp(char* buff, int32_t buff_len);
 

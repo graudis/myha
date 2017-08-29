@@ -3,37 +3,37 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
-#include "bnf.h"
-#include "logsystem.h"
+#include "BNF.h"
+#include "LogSystem.h"
 
 
-bnf::bnf() : __io_service_work(new boost::asio::io_service::work(__io_service))
+BNF::BNF() : __io_service_work(new boost::asio::io_service::work(__io_service))
 {
 	__session_process_func = NULL;
 	__stopped = false;
 }
 
-bnf::~bnf()
+BNF::~BNF()
 {
 }
 
-bnf* bnf::instance()
+BNF* BNF::instance()
 {
-	static bnf __instance;
+	static BNF __instance;
 	return &__instance;
 }
 
-void bnf::Init(void)
+void BNF::Init(void)
 {
 	for (int i = 0; i <= SEQ_MANAGER_GROW_INDEX_COUNT; i++)
 	{
-		rnSocketIOServiceTcp* p1 = new rnSocketIOServiceTcp(__io_service);
+		SocketIOServiceTcp* p1 = new SocketIOServiceTcp(__io_service);
 		__tcp_session_buf.push_back(p1);
 	}
 
 	for (int i = 0; i <= SEQ_MANAGER_GROW_INDEX_COUNT; i++)
 	{
-		rnSocketIOServiceTcp* p1 = new rnSocketIOServiceTcp(__io_service);
+		SocketIOServiceTcp* p1 = new SocketIOServiceTcp(__io_service);
 		__tcp_connect_session_buf.push_back(p1);
 	}
 
@@ -47,13 +47,13 @@ void bnf::Init(void)
 #endif
 }
 
-void bnf::WorkerThread()
+void BNF::WorkerThread()
 {
 	boost::system::error_code ec;
 	__io_service.run(ec);
 }
 
-void bnf::RemoveSessionThread()
+void BNF::RemoveSessionThread()
 {
 	map_session_list_t::iterator it;
 
@@ -73,7 +73,7 @@ void bnf::RemoveSessionThread()
 				if (it->second->isCloseError() == false)
 				{
 					__tcp_session_list.erase(it);
-					bnf::instance()->__tcp_session_seq.push(handle);
+					BNF::instance()->__tcp_session_seq.push(handle);
 				}
 			}
 		}
@@ -86,7 +86,7 @@ void bnf::RemoveSessionThread()
 				if (it->second->isCloseError() == false)
 				{
 					__tcp_connect_session_list.erase(it);
-					bnf::instance()->__tcp_connect_session_seq.push(handle);
+					BNF::instance()->__tcp_connect_session_seq.push(handle);
 				}
 			}
 		}
@@ -116,7 +116,7 @@ void bnf::RemoveSessionThread()
 	}
 }
 
-void bnf::SessionProcessThread()
+void BNF::SessionProcessThread()
 {
 	if (__session_process_func != NULL)
 	{
@@ -126,14 +126,14 @@ void bnf::SessionProcessThread()
 
 	while (1)
 	{
-		SessionEvent::SP session_event(bnf::instance()->GetSessionFromQueue());
+		SessionEvent::SP session_event(BNF::instance()->GetSessionFromQueue());
 
 		if (ProcessEvent(session_event) == false)
 			return;
 	}
 }
 
-bool bnf::ProcessEvent(SessionEvent::SP& session_event)
+bool BNF::ProcessEvent(SessionEvent::SP& session_event)
 {
 	switch (session_event->type_)
 	{
@@ -144,23 +144,23 @@ bool bnf::ProcessEvent(SessionEvent::SP& session_event)
 	case SessionEvent::ON_CLOSE:
 	case SessionEvent::ON_TIMER:
 	{
-		rnSocketIOHandler* handler = (rnSocketIOHandler*)(session_event->session_->GetUserData());
+		SocketIOHandler* handler = (SocketIOHandler*)(session_event->session_->GetUserData());
 		if (handler != NULL)
-			handler->operate((rnSocketIOService*)session_event->session_);
+			handler->operate((SocketIOService*)session_event->session_);
 	}
 	break;
 	case SessionEvent::ON_CONNECT:
 	{
-		rnSocketIOHandler* handler = (rnSocketIOHandler*)(session_event->session_->GetUserData());
+		SocketIOHandler* handler = (SocketIOHandler*)(session_event->session_->GetUserData());
 		if (handler != NULL)
-			handler->onConnect((rnSocketIOService*)session_event->session_);
+			handler->onConnect((SocketIOService*)session_event->session_);
 	}
 	break;
 	case SessionEvent::ON_CONNECT_FAIL:
 	{
-		rnSocketIOHandler* handler = (rnSocketIOHandler*)(session_event->session_->GetUserData());
+		SocketIOHandler* handler = (SocketIOHandler*)(session_event->session_->GetUserData());
 		if (handler != NULL)
-			handler->onConnectFail((rnSocketIOService*)session_event->session_);
+			handler->onConnectFail((SocketIOService*)session_event->session_);
 	}
 	break;
 	case SessionEvent::ON_EVENT:
@@ -174,18 +174,18 @@ bool bnf::ProcessEvent(SessionEvent::SP& session_event)
 	return true;
 }
 
-void bnf::Run(int worker_thread_count)
+void BNF::Run(int worker_thread_count)
 {
 	// session process thread
-	boost::thread session_process(boost::bind(&bnf::SessionProcessThread, this));
+	boost::thread session_process(boost::bind(&BNF::SessionProcessThread, this));
 
 	// remove session thread
-	boost::thread remove_session(boost::bind(&bnf::RemoveSessionThread, this));
+	boost::thread remove_session(boost::bind(&BNF::RemoveSessionThread, this));
 
 	// i/o worker thread
 	for (int i = 0; i < worker_thread_count; i++)
 	{
-		__thread_group.create_thread(boost::bind(&bnf::WorkerThread, this));
+		__thread_group.create_thread(boost::bind(&BNF::WorkerThread, this));
 		LOG_INFO("bnf - start worker therad.");
 	}
 
@@ -211,7 +211,7 @@ void bnf::Run(int worker_thread_count)
 	LOG_INFO("bnf - remove session thread end.");
 }
 
-session_handle bnf::CreateListen(std::string host, int port, int waittimeout, rnSocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
+session_handle BNF::CreateListen(std::string host, int port, int waittimeout, SocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
 {
 	if (__stopped == true)
 		return SessionBase::INVALID_SESSION_HANDLE;
@@ -229,18 +229,18 @@ session_handle bnf::CreateListen(std::string host, int port, int waittimeout, rn
 	return pListenSession->GetHandle();
 }
 
-session_handle bnf::CreateListen(const char* host, int port, int waittimeout, rnSocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
+session_handle BNF::CreateListen(const char* host, int port, int waittimeout, SocketIOHandler* func, size_t receive_buffer_size, size_t send_buffer_size)
 {
 	std::string host_str = (host != NULL) ? host : "0.0.0.0";
 	return CreateListen(host_str, port, waittimeout, func, receive_buffer_size, send_buffer_size);
 }
 
-void bnf::RemoveSession(session_handle handle)
+void BNF::RemoveSession(session_handle handle)
 {
 	__remove_session_queue.push_signal(handle);
 }
 
-void bnf::CloseListen(session_handle handle)
+void BNF::CloseListen(session_handle handle)
 {
 	map_session_list_t::iterator it = __tcp_listen_session_list.find(handle);
 	if (it == __tcp_listen_session_list.end())
@@ -250,7 +250,7 @@ void bnf::CloseListen(session_handle handle)
 	__tcp_listen_session_list.erase(it);
 }
 
-void bnf::Stop()
+void BNF::Stop()
 {
 	__stopped = true;
 
@@ -268,7 +268,7 @@ void bnf::Stop()
 		boost::recursive_mutex::scoped_lock lock1(__tcp_session_list.getmutex());
 		BOOST_FOREACH(map_session_list_t::value_type p, __tcp_session_list)
 		{
-			((rnSocketIOService *)p.second)->Close("server stop.");
+			((SocketIOService *)p.second)->Close("server stop.");
 		}
 	}
 
@@ -277,7 +277,7 @@ void bnf::Stop()
 		boost::recursive_mutex::scoped_lock lock1(__tcp_connect_session_list.getmutex());
 		BOOST_FOREACH(map_session_list_t::value_type p, __tcp_connect_session_list)
 		{
-			((rnSocketIOService *)p.second)->Close("server stop.");
+			((SocketIOService *)p.second)->Close("server stop.");
 		}
 	}
 
@@ -294,7 +294,7 @@ void bnf::Stop()
 	__io_service_work.reset();
 }
 
-void bnf::Clear()
+void BNF::Clear()
 {
 	static bool _exit_flag = false;
 
@@ -312,7 +312,7 @@ void bnf::Clear()
 	__tcp_connect_session_buf.clear();
 }
 
-session_handle bnf::CreateConnect(std::string& host, std::string& port, void* user_data)
+session_handle BNF::CreateConnect(std::string& host, std::string& port, void* user_data)
 {
 	if (__stopped == true)
 		return SessionBase::INVALID_SESSION_HANDLE;
@@ -321,7 +321,7 @@ session_handle bnf::CreateConnect(std::string& host, std::string& port, void* us
 	if (__tcp_connect_session_seq.pop(shandle) == false)
 		growConnectSessionBuffer();
 
-	rnSocketIOServiceTcp* pSession = (rnSocketIOServiceTcp*)&__tcp_connect_session_buf[shandle - CONNECT_SESSION_INDENTIFY];
+	SocketIOServiceTcp* pSession = (SocketIOServiceTcp*)&__tcp_connect_session_buf[shandle - CONNECT_SESSION_INDENTIFY];
 	pSession->Open(shandle);
 	boost::asio::ip::tcp::socket& socket = pSession->Socket();
 
@@ -352,7 +352,6 @@ session_handle bnf::CreateConnect(std::string& host, std::string& port, void* us
 	pSession->SetUserData(user_data);
 	pSession->SetType(SessionBase::CONNECT_SESSION);
 	pSession->_getIp();
-	pSession->IncRefCount();
 
 	LOG_INFO("bnf [%s] CreateConnect - connected. fd: %d, handle: %d", pSession->ip().c_str(), pSession->Socket().native(), pSession->GetHandle());
 
@@ -361,20 +360,20 @@ session_handle bnf::CreateConnect(std::string& host, std::string& port, void* us
 	return pSession->GetHandle();
 }
 
-session_handle bnf::CreateConnect(std::string& host, int port, void* user_data)
+session_handle BNF::CreateConnect(std::string& host, int port, void* user_data)
 {
 	std::string port_str = (boost::format("%d") % port).str();
 	return CreateConnect(host, port_str, user_data);
 }
 
-session_handle bnf::CreateConnect(const char* host, int port, void* user_data)
+session_handle BNF::CreateConnect(const char* host, int port, void* user_data)
 {
 	std::string host_str = host;
 	std::string port_str = (boost::format("%d") % port).str();
 	return CreateConnect(host_str, port_str, user_data);
 }
 
-session_handle bnf::CreateAsyncConnect(std::string& host, int port, void* user_data)
+session_handle BNF::CreateAsyncConnect(std::string& host, int port, void* user_data)
 {
 	if (__stopped == true)
 		return SessionBase::INVALID_SESSION_HANDLE;
@@ -385,12 +384,11 @@ session_handle bnf::CreateAsyncConnect(std::string& host, int port, void* user_d
 		growConnectSessionBuffer();
 	}
 
-	rnSocketIOService *pSession = &__tcp_connect_session_buf[shandle - CONNECT_SESSION_INDENTIFY];
+	SocketIOService *pSession = &__tcp_connect_session_buf[shandle - CONNECT_SESSION_INDENTIFY];
 	pSession->Open(shandle);
 
 	pSession->SetUserData(user_data);
 	pSession->SetType(SessionBase::CONNECT_SESSION);
-	pSession->IncRefCount();
 
 	__tcp_connect_session_list.insert(pSession->GetHandle(), pSession);
 
@@ -405,7 +403,7 @@ session_handle bnf::CreateAsyncConnect(std::string& host, int port, void* user_d
 	return pSession->GetHandle();
 }
 
-SessionBase* bnf::GetSessionPointer(session_handle handle)
+SessionBase* BNF::GetSessionPointer(session_handle handle)
 {
 	map_session_list_t::iterator it;
 
@@ -452,7 +450,7 @@ SessionBase* bnf::GetSessionPointer(session_handle handle)
 	return NULL;
 }
 
-session_handle bnf::CreateTimer(int msec, void *user_data)
+session_handle BNF::CreateTimer(int msec, void *user_data)
 {
 	if (__stopped == true)
 		return SessionBase::INVALID_SESSION_HANDLE;
@@ -465,7 +463,7 @@ session_handle bnf::CreateTimer(int msec, void *user_data)
 	return pSession->GetHandle();
 }
 
-session_handle bnf::CreateTimerPeriod(int start_msec, int period_msec, void *user_data)
+session_handle BNF::CreateTimerPeriod(int start_msec, int period_msec, void *user_data)
 {
 	if (__stopped == true)
 		return SessionBase::INVALID_SESSION_HANDLE;
@@ -478,20 +476,20 @@ session_handle bnf::CreateTimerPeriod(int start_msec, int period_msec, void *use
 	return pSession->GetHandle();
 }
 
-void bnf::growSessionBuffer()
+void BNF::growSessionBuffer()
 {
 	for (int32_t i = 0; i < SEQ_MANAGER_GROW_INDEX_COUNT; ++i)
 	{
-		rnSocketIOServiceTcp* p = new rnSocketIOServiceTcp(__io_service);
+		SocketIOServiceTcp* p = new SocketIOServiceTcp(__io_service);
 		__tcp_session_buf.push_back(p);
 	}
 }
 
-void bnf::growConnectSessionBuffer()
+void BNF::growConnectSessionBuffer()
 {
 	for (int32_t i = 0; i < SEQ_MANAGER_GROW_INDEX_COUNT; ++i)
 	{
-		rnSocketIOServiceTcp* p = new rnSocketIOServiceTcp(__io_service);
+		SocketIOServiceTcp* p = new SocketIOServiceTcp(__io_service);
 		__tcp_connect_session_buf.push_back(p);
 	}
 }

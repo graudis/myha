@@ -4,24 +4,24 @@
 #include "localtype.h"
 #include "cserver_session.h"
 
-class rnSocketIOService;
+class SocketIOService;
 
-class CCenter : public rnSocketIOHandler
+class CCenter : public SocketIOHandler
 {
 public:
-	CCenter(rnSocketIOService* service);
+	CCenter(SocketIOService* service);
 	~CCenter();
-	void operate(rnSocketIOService* service);
+	void operate(SocketIOService* service);
 
-	void handleLocalRequest(rnPacket::SP& packet);
-	void handleLocalResponse(rnPacket::SP& packet);
+// 	void handleLocalRequest(Packet::SP& packet);
+	void handleLocalResponse(Packet::SP& packet);
 
-	void deliver(rnPacket::SP& packet);
-	void deliver(rnPacket* packet);
+	void deliver(Packet::SP& packet);
+	void deliver(Packet* packet);
 
 	const char* getIp() { return __service->ip().c_str(); }
 
 private:
 	CServerSession* __server_session;
-	rnSocketIOService* __service;
+	SocketIOService* __service;
 };
