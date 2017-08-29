@@ -1,11 +1,9 @@
 CC			=	g++
 
-INCLUDES	=	-I/usr/include
 INCLUDES	=
 
-CFLAGS		=	-c -Wall -g -D_DEBUG -fPIC -DBOOST_LOG_DYN_LINK
+CFLAGS		=	-c -Wall -g -D_DEBUG -fPIC
 
-LNK_OPT		=	-static
 LNK_OPT		=
 
 LIBS		=	-lpthread \
@@ -18,27 +16,26 @@ LIBS		=	-lpthread \
 				-lboost_chrono \
 				-lboost_atomic
 
-FILES		=	BNF.cc
-			Config_INI.cc
-			ListenSessionTcp.cc
-			LogSystem.cc
-			MasterClient.cc
-			MasterClientAccept.cc
-			MasterClientService.cc
-			Packet.cc
-			ProcessCheck.cc
-			SocketIOHandler.cc
-			SocketIOServiceTcp.cc
-			TimerSession.cc
-			ccenter.cc
-			cserver_session.cc
-			cserver_session_manager.cc
-			myhaMain.cc
-			myhaMaster.cc
-			myhaSlave.cc
-			network_util.cc
-			threaddata.cc
-
+FILES		=	Config_INI.cc \
+				ProcessCheck.cc \
+				BNF.cc \
+				ccenter.cc \
+				MasterClient.cc \
+				cserver_session.cc \
+				cserver_session_manager.cc \
+				ListenSessionTcp.cc \
+				LogSystem.cc \
+				MasterClientAccept.cc \
+				MasterClientService.cc \
+				myhaMaster.cc \
+				myhaSlave.cc \
+				myhaMain.cc \
+				network_util.cc \
+				SocketIOServiceTcp.cc \
+				Packet.cc \
+				SocketIOHandler.cc \
+				threaddata.cc \
+				TimerSession.cc
 
 OBJS		=	$(FILES:.cc=.o)
 
@@ -54,5 +51,7 @@ all:	$(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES)-o $@ $<
 
 clean :
-	rm -rf $(TARGET) $(OBJS)
+	rm -rf $(TARGET) $(OBJS) *.o
 	
+dep:
+	$(CC) $(INCLUDES) -M $(CFLAGS) $(FILES) > .depend
