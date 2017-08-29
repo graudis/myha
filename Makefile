@@ -18,46 +18,27 @@ LIBS		=	-lpthread \
 				-lboost_chrono \
 				-lboost_atomic
 
-FILES		=	Config_INI.cc \
-				ProcessCheck.cc \
-				bnf.cc \
-				cbilling.cc \
-				ccenter.cc \
-				ccenter_accept.cc \
-				cdbworker.cc \
-				cmonitor.cc \
-				connmonitorservice.cc \
-				connmonitorservice_accept.cc \
-				cserver_session.cc \
-				cserver_session_manager.cc \
-				gmapsetting.cc \
-				gmobdatamanager.cc \
-				grandomoption.cc \
-				gsystemcontrol.cc \
-				instancecooltimemanager.cc \
-				instancemapmanager.cc \
-				listen_sessionTcp.cc \
-				logsystem.cc \
-				mcenteraccept.cc \
-				mcenterservice.cc \
-				mdbworker.cc \
-				mloginaccept.cc \
-				mloginservice.cc \
-				mservercmd.cc \
-				mservercmd_service.cc \
-				mservercommandmanager.cc \
-				mservermanager.cc \
-				myhaMaster.cc \
-				myhaSlave.cc \
-				myha_main.cc \
-				network_util.cc \
-				random_machine.cc \
-				rnSocketIOServiceTcp.cc \
-				rnipdata.cc \
-				rnpacket.cc \
-				rnsocketiohandler.cc \
-				threaddata.cc \
-				timer_session.cc
+FILES		=	BNF.cc
+			Config_INI.cc
+			ListenSessionTcp.cc
+			LogSystem.cc
+			MasterClient.cc
+			MasterClientAccept.cc
+			MasterClientService.cc
+			Packet.cc
+			ProcessCheck.cc
+			SocketIOHandler.cc
+			SocketIOServiceTcp.cc
+			TimerSession.cc
+			ccenter.cc
+			cserver_session.cc
+			cserver_session_manager.cc
+			myhaMain.cc
+			myhaMaster.cc
+			myhaSlave.cc
+			network_util.cc
+			threaddata.cc
+
 
 OBJS		=	$(FILES:.cc=.o)
 
