@@ -10,8 +10,6 @@ LNK_OPT		=
 
 LIBS		=	-lpthread \
 				-llog4cxx \
-				-lboost_log \
-				-lboost_log_setup \
 				-lboost_thread \
 				-lboost_filesystem \
 				-lboost_system \
