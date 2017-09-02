@@ -1,6 +1,6 @@
 CC			=	g++
 
-INCLUDES	= -Iinclude
+INCLUDES	= -I../include
 
 CFLAGS		=	-c -Wall -g -D_DEBUG -fPIC
 
@@ -34,32 +34,29 @@ FILES		=	iniconfig.cc \
 				threaddata.cc \
 				TimerSession.cc
 
-SRCS        = $(wildcard src/*.cc) 
+SRCS        = $(wildcard *.cc)
 OBJECTS     = $(patsubst %.cc, %.o, $(SRCS))
  
 
-#OBJS		=	$(FILES:.cc=.o) 
-#OBJS		=	$(FILES:.cc=.o) 
- 
+OBJS		=	$(FILES:.cc=.o)
 .SUFFIXES : .cc .o .s 
 
-#$(OBJECTS) : $(SRCS)
-#	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $(LIBS) $^
+$(OBJECTS) : $(SRCS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $(LIBS) $^
     
-TARGET		=	myha
-
-all:	$(OBJECTS)
-	$(CC) $(LNK_OPT) -o $(TARGET) $(OBJECTS) $(LIBS)
-	rm -rf $(TARGET).gmon profile 
-
 clean :
-	rm -rf $(OBJECTS) *.o 
+	rm -rf $(OBJS) *.o 
 
-.cc.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
 
 # -- will delete this line --
+#TARGET		=	myha
 
+#all:	$(OBJS)
+#	$(CC) $(LNK_OPT) -o $(TARGET) $(OBJS) $(LIBS)
+#	rm -rf $(TARGET).gmon profile
+
+#.cc.o:
+#	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
 
 #clean :
 #	rm -rf $(TARGET) $(OBJS) *.o 
