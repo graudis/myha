@@ -16,31 +16,12 @@ LIBS		=	-lpthread \
 				-lboost_chrono \
 				-lboost_atomic
 
-FILES		=	iniconfig.cc \
-				ProcessCheck.cc \
-     			BNF.cc \
-				ccenter.cc \
-				MasterClient.cc \
-				cserver_session.cc \
-				cserver_session_manager.cc \
-				ListenSessionTcp.cc \
-				LogSystem.cc \
-				MasterClientAccept.cc \
-				MasterClientService.cc \
-				network_util.cc \
-				SocketIOServiceTcp.cc \
-				Packet.cc \
-				SocketIOHandler.cc \
-				threaddata.cc \
-				TimerSession.cc
 
 SRCS        = $(wildcard src/*.cc) 
-OBJECTS     = $(patsubst %.cc, %.o, $(SRCS))
- 
+OBJS     = $(patsubst %.cc, %.o, $(SRCS))
+DEST        = /usr/local/mysqlha
+TARGET		=	myha
 
-#OBJS		=	$(FILES:.cc=.o) 
-#OBJS		=	$(FILES:.cc=.o) 
- 
 .SUFFIXES : .cc .o .s 
 
 #$(OBJECTS) : $(SRCS)
@@ -49,11 +30,19 @@ OBJECTS     = $(patsubst %.cc, %.o, $(SRCS))
 TARGET		=	myha
 
 all:	$(OBJECTS)
-	$(CC) $(LNK_OPT) -o $(TARGET) $(OBJECTS) $(LIBS)
+	$(CC) $(LNK_OPT) -o $(TARGET) $(OBJS) $(LIBS)
 	rm -rf $(TARGET).gmon profile 
 
+install : $(TARGET) 
+	mkdir -p $(DEST)/bin/ 
+	mkdir -p $(DEST)/cfg/
+	cp -f $(TARGET) $(DEST)/bin/$(TARGET)
+	cp -f script/config.ini $(DEST)/bin/config.ini
+	cp -f script/cfg/log.xml $(DEST)/cfg/log.xml
+#    install -m 700 -D $(TARGET) $(DEST)/bin/$(TARGET)
+
 clean :
-	rm -rf $(OBJECTS) *.o 
+	rm -rf $(OBJS) *.o 
 
 .cc.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
