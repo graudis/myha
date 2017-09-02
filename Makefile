@@ -17,19 +17,21 @@ LIBS		=	-lpthread \
 				-lboost_atomic
 
 
-SRCS        = $(wildcard src/*.cc) 
-OBJS     = $(patsubst %.cc, %.o, $(SRCS))
-DEST        = /usr/local/mysqlha
-TARGET		=	myha
+SRCS      = $(wildcard src/*.cc) 
+OBJS      = $(patsubst %.cc, %.o, $(SRCS))
+DEST      = /usr/local/mysqlha
+TARGET	  =	myha
 
 .SUFFIXES : .cc .o .s 
+.cc.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
 
-#$(OBJECTS) : $(SRCS)
+#$(OBJS) : $(SRCS)
 #	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $(LIBS) $^
     
 TARGET		=	myha
 
-all:	$(OBJECTS)
+all:	$(OBJS)
 	$(CC) $(LNK_OPT) -o $(TARGET) $(OBJS) $(LIBS)
 	rm -rf $(TARGET).gmon profile 
 
@@ -39,13 +41,12 @@ install : $(TARGET)
 	cp -f $(TARGET) $(DEST)/bin/$(TARGET)
 	cp -f script/config.ini $(DEST)/bin/config.ini
 	cp -f script/cfg/log.xml $(DEST)/cfg/log.xml
-#    install -m 700 -D $(TARGET) $(DEST)/bin/$(TARGET)
 
 clean :
-	rm -rf $(OBJS) *.o 
+	rm -rf $(OBJS) *.o  $(TARGET)
 
-.cc.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
+#.cc.o:
+#	$(CC) $(CFLAGS) $(INCLUDES) -o $@ $<
 
 # -- will delete this line --
 
