@@ -59,59 +59,41 @@ bool TCPPortCheck(std::string check_ip, uint16_t check_port)
 	{
 		std::getline(in_stream, read_line);
 
-		if (line < 1)
+		if (line < 1)	// 첫 라인은 column 이름임 
+			continue;
+
+		if (read_line.size() == 0)	// 빈 라인(끝일 경우)
 			continue;
 
 		typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
-		boost::char_separator<char> sep(" ");
-		tokenizer tokens(read_line, sep);
+		boost::char_separator<char> sep_spc(" ");
+		tokenizer row_tokens(read_line, sep_spc);
 
-		std::vector<std::string> xxx;
-		for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter)
-			xxx.push_back(*tok_iter);
+		std::vector<std::string> row;
+		for (tokenizer::iterator tok_iter = row_tokens.begin(); tok_iter != row_tokens.end(); ++tok_iter)
+			row.push_back(*tok_iter);
 
-		if (xxx.size() <= 1)
+		if (row.size() <= 1)	// row가 공백일 경우
 			continue;
 
-		if (xxx.size() > 1)
-		{
-			boost::char_separator<char> sep(":");
-			tokenizer tokens2(xxx[1], sep);
+		boost::char_separator<char> sep_colon(":");
+		tokenizer column_token(row[1], sep_colon);
 
-			std::vector<std::string> xx2;
-			for (tokenizer::iterator tok_iter2 = tokens2.begin(); tok_iter2 != tokens2.end(); ++tok_iter2)
-				xx2.push_back(*tok_iter2);
+		std::vector<std::string> column;
+		for (tokenizer::iterator tok_iter2 = column_token.begin(); tok_iter2 != column_token.end(); ++tok_iter2)
+			column.push_back(*tok_iter2);
 
-			std::stringstream ss1;
-			std::stringstream ss2;
-			uint32_t ip;
-			uint16_t port;
+		std::stringstream port_string;
+		port_string << std::hex << column[1];
 
-			ss1 << std::hex << xx2[0];
-			ss1 >> ip;
+		uint16_t port;
+		port_string >> port;
 
-			ip = ntohl(ip);
+		if (check_port != port)
+			continue;
 
-			ss2 << std::hex << xx2[1];
-			ss2 >> port;
-
-			struct sockaddr_in addr1;
-			addr1.sin_addr.s_addr = htonl(ip);
-
-			std::string str = inet_ntoa(addr1.sin_addr);
-
-			if (check_ip != str)
-				continue;
-
-			if (check_port != port)
-				continue;
-
-			if (xxx[3] != "0A")
-				continue;
-
-			in_stream.close();
-			return true;
-		}
+		in_stream.close();
+		return true;
 	}
 
 	in_stream.close();

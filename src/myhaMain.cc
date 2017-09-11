@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	{
 		printf("관리자 권한이 아닙니다.\n");
 		printf("관리자 권한으로 실행시키십시오.\n");
-//		return 1;
+		return 1;
 	}
 
 	if (Config::INI::Instance()->init("config.ini") == false)
