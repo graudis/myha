@@ -67,6 +67,9 @@ public:
 	virtual void NonBlockingIoOn() = 0;
 	virtual void NonBlockingIoOff() = 0;
 
+	virtual void IncRefCount() = 0;
+	virtual void DecRefCount() = 0;
+
 	virtual int32_t getWirteQueueCount() = 0;
 
 	virtual void closeOnExecOn() = 0;

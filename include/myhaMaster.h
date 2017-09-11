@@ -4,7 +4,7 @@
 #include "status.h"
 #include "MasterClientAccept.h"
 
-#include "iniconfig.h"
+#include "Config_INI.h"
 
 class TimerClass : public SocketIOHandler
 {

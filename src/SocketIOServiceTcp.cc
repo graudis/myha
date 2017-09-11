@@ -8,6 +8,7 @@ SocketIOServiceTcp::SocketIOServiceTcp(boost::asio::io_service& io_service)
 	: SocketIOService(io_service, SessionBase::SESSION),
 	__socket(io_service),
 	__wait_timer(io_service),
+	__ref_count(0),
 	__timeout(false),
 	boost_strand_(io_service)
 {
@@ -58,6 +59,7 @@ bool SocketIOServiceTcp::AsyncConnect(const std::string& host, int port)
 
 	LOG_DEBUG("bnf - async connecting to %s:%d. fd: %d, handle: %d", host.c_str(), port, __socket.native(), GetHandle());
 
+	IncRefCount();
 	__socket.async_connect(
 		endpoint,
 		boost_strand_.wrap(
@@ -76,6 +78,7 @@ void SocketIOServiceTcp::Run()
 
 	NoDelayOn();
 
+	IncRefCount();
 	boost::asio::async_read(
 		__socket,
 		boost::asio::buffer(__now_packet->getHeader(), PACKET_HEADER_SIZE),
@@ -105,12 +108,16 @@ void SocketIOServiceTcp::CloseShutdownBoth(std::string err_str)
 
 void SocketIOServiceTcp::deliver(Packet::SP packet)
 {
+// 	boost::recursive_mutex::scoped_lock close_lock(__close_mutex);
 	if (__close_flag == true || __socket.is_open() == false)
 		return;
 
+// 	boost::recursive_mutex::scoped_lock lock(__write_queue_mutex); 
+	
 	__write_queue.push_back(packet);
 	if (__write_queue.size() == 1)
 	{
+		IncRefCount();
 		boost::asio::async_write(
 			__socket,
 			boost::asio::buffer(packet->getHeader(), packet->getSize()),
@@ -287,6 +294,41 @@ void SocketIOServiceTcp::NonBlockingIoOff()
 	__socket.io_control(command, error);
 }
 
+void SocketIOServiceTcp::IncRefCount()
+{
+// 	boost::recursive_mutex::scoped_lock lock(__ref_count_mutex);
+	__ref_count++;
+}
+
+void SocketIOServiceTcp::DecRefCount()
+{
+// 	boost::recursive_mutex::scoped_lock lock(__ref_count_mutex);
+	__ref_count--;
+
+	if (0 == __ref_count)
+	{
+		LOG_INFO("bnf [%s] - closed. fd: %d, handle: %d", ip().c_str(), __socket.native(), GetHandle());
+
+		boost::system::error_code error;
+		__socket.close(error);
+		if (error)
+		{
+			LOG_ERROR("bnf [%s] - socket_.close error. error: %s", ip().c_str(), error.message().c_str());
+			_close_error = true;
+		}
+
+		if (_user_data != NULL)
+		{
+			__read_queue.push(NULL);
+			BNF::instance()->PutSessionEvent(SessionEvent::ON_CLOSE, this);
+		}
+		else
+		{
+			BNF::instance()->RemoveSession(GetHandle());
+		}
+	}
+}
+
 void SocketIOServiceTcp::closeOnExecOn()
 {
 	int oldflags = fcntl(__socket.native(), F_GETFD, 0);
@@ -343,6 +385,7 @@ void SocketIOServiceTcp::Init()
 
 	__read_queue.clear();
 	__write_queue.clear();
+	__ref_count = 0;
 
 	__timeout = false;
 	_close_error = false;
@@ -370,6 +413,7 @@ void SocketIOServiceTcp::HandleAsyncConnect(const boost::system::error_code& err
 		BNF::instance()->PutSessionEvent(SessionEvent::ON_CONNECT, this);
 
 		Run();
+		DecRefCount();
 	}
 	else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
 	{
@@ -395,6 +439,7 @@ void SocketIOServiceTcp::HandleAsyncConnect(const boost::system::error_code& err
 		BNF::instance()->PutSessionEvent(SessionEvent::ON_CONNECT_FAIL, this);
 
 		__close_shutdown_both();
+		DecRefCount();
 	}
 }
 
@@ -415,6 +460,7 @@ void SocketIOServiceTcp::HandleReadHeader(const boost::system::error_code& error
 			__close();
 		}
 
+		DecRefCount();
 		return;
 	}
 
@@ -425,7 +471,7 @@ void SocketIOServiceTcp::HandleReadHeader(const boost::system::error_code& error
 		LOG_ERROR("bnf [%s] - HandleReadHeader error. fd: %d, handle: %d, error: %s", ip().c_str(), __socket.native(), GetHandle(), message.c_str());
 
 		__close();
-
+		DecRefCount();
 		return;
 	}
 
@@ -459,7 +505,7 @@ void SocketIOServiceTcp::HandleReadBody(const boost::system::error_code& error)
 		{
 			__close();
 		}
-
+		DecRefCount();
 		return;
 	}
 
@@ -483,12 +529,14 @@ void SocketIOServiceTcp::HandleWrite(const boost::system::error_code& error, std
 	bool error_flag = false;
 
 	{
+// 		boost::recursive_mutex::scoped_lock lock(__write_queue_mutex);
 		__write_queue.pop_front();
 
 		if (!error)
 		{
 			if (__write_queue.empty())
 			{
+				DecRefCount();
 				return;
 			}
 
@@ -514,6 +562,7 @@ void SocketIOServiceTcp::HandleWrite(const boost::system::error_code& error, std
 	if (error_flag == true)
 	{
 		__close_shutdown_both();
+		DecRefCount();
 	}
 }
 
@@ -533,6 +582,8 @@ void SocketIOServiceTcp::WaitTimerClose(const boost::system::error_code& error)
 
 void SocketIOServiceTcp::__close()
 {
+// 	boost::recursive_mutex::scoped_lock lock(__close_mutex);
+
 	if (__close_flag == true)
 		return;
 
@@ -546,10 +597,14 @@ void SocketIOServiceTcp::__close()
 	boost::system::error_code error;
 	//	socket_.cancel( error );
 	__socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive, error);
+
+	DecRefCount();
 }
 
 void SocketIOServiceTcp::__close_shutdown_both()
 {
+// 	boost::recursive_mutex::scoped_lock lock(__close_mutex); 
+	
 	if (__close_flag == true || __socket.is_open() == false)
 		return;
 
@@ -563,4 +618,6 @@ void SocketIOServiceTcp::__close_shutdown_both()
 	boost::system::error_code error;
 	__socket.cancel(error);
 	__socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
+
+	DecRefCount();
 }

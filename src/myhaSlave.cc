@@ -2,7 +2,7 @@
 
 #include <boost/format.hpp>
 
-#include "iniconfig.h"
+#include "Config_INI.h"
 
 #include "ccenter.h"
 

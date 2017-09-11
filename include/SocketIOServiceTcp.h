@@ -65,6 +65,9 @@ public:
 	virtual void NonBlockingIoOn();
 	virtual void NonBlockingIoOff();
 
+	virtual void IncRefCount();
+	virtual void DecRefCount();
+
 	virtual int32_t getWirteQueueCount() { return __write_queue.size(); }
 
 	virtual void closeOnExecOn();
@@ -103,6 +106,12 @@ private:
 	Packet* __now_packet;
 	queue_ts<Packet*> __read_queue;
 	std::deque<Packet::SP> __write_queue;
+// 	boost::recursive_mutex __write_queue_mutex;
+
+// 	boost::recursive_mutex __close_mutex;
+
+// 	boost::recursive_mutex __ref_count_mutex;
+	int32_t __ref_count;
 
 	bool __timeout;
 	boost::system::error_code __read_error_code;

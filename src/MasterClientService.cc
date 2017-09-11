@@ -14,7 +14,7 @@ MasterClientService::MasterClientService(SocketIOService* service) :
 
 MasterClientService::~MasterClientService()
 {
-	__service = NULL;
+	__service = nullptr;
 }
 
 void MasterClientService::operate(SocketIOService* service)

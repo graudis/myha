@@ -352,6 +352,7 @@ session_handle BNF::CreateConnect(std::string& host, std::string& port, void* us
 	pSession->SetUserData(user_data);
 	pSession->SetType(SessionBase::CONNECT_SESSION);
 	pSession->_getIp();
+	pSession->IncRefCount();
 
 	LOG_INFO("bnf [%s] CreateConnect - connected. fd: %d, handle: %d", pSession->ip().c_str(), pSession->Socket().native(), pSession->GetHandle());
 
@@ -389,6 +390,7 @@ session_handle BNF::CreateAsyncConnect(std::string& host, int port, void* user_d
 
 	pSession->SetUserData(user_data);
 	pSession->SetType(SessionBase::CONNECT_SESSION);
+	pSession->IncRefCount();
 
 	__tcp_connect_session_list.insert(pSession->GetHandle(), pSession);
 

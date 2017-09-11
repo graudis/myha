@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "iniconfig.h"
+#include "Config_INI.h"
 
 #include "LogSystem.h"
 
