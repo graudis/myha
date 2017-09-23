@@ -4,9 +4,6 @@
 
 namespace CLocalResponse
 {
-#pragma pack(push, 1)
-#pragma pack(pop)
-
 	inline Packet* serverInfo(int32_t type, int32_t id, int32_t channel)
 	{
 		Packet* packet = new Packet(sizeof(TServerInfo));
@@ -17,6 +14,24 @@ namespace CLocalResponse
 		data->id = id;
 		data->channel = channel;
 		packet->setDataSizeWithoutHeader(sizeof(TServerInfo));
+
+		return packet;
+	}
+
+#pragma pack(push, 1)
+	struct THaveVIP
+	{
+		bool have_vip;
+	};
+#pragma pack(pop)
+	inline Packet* hasVIP(bool has_vip)
+	{
+		Packet* packet = new Packet(sizeof(THaveVIP));
+
+		packet->setGroupType(PGROUP_LOCAL_RESPONSE, PTYPE_LOCAL_HAVE_VIP);
+		THaveVIP* data = reinterpret_cast<THaveVIP*>(packet->data());
+		data->have_vip = has_vip;
+		packet->setDataSizeWithoutHeader(sizeof(THaveVIP));
 
 		return packet;
 	}

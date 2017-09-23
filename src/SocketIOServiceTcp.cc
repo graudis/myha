@@ -113,7 +113,8 @@ void SocketIOServiceTcp::deliver(Packet::SP packet)
 		return;
 
 // 	boost::recursive_mutex::scoped_lock lock(__write_queue_mutex); 
-	
+
+	// LOG_TRACE("--> Packet[ %d / %d ]    ", packet->getGroup(), packet->getType());
 	__write_queue.push_back(packet);
 	if (__write_queue.size() == 1)
 	{
@@ -487,7 +488,7 @@ void SocketIOServiceTcp::HandleReadHeader(const boost::system::error_code& error
 			boost::bind(&SocketIOServiceTcp::HandleReadBody, this, boost::asio::placeholders::error)
 		)
 	);
-	// now_packet_->dumpSimple();
+	// __now_packet->dumpSimple();
 }
 
 void SocketIOServiceTcp::HandleReadBody(const boost::system::error_code& error)
@@ -521,7 +522,7 @@ void SocketIOServiceTcp::HandleReadBody(const boost::system::error_code& error)
 			boost::bind(&SocketIOServiceTcp::HandleReadHeader, this, boost::asio::placeholders::error)
 		)
 	);
-	// now_packet_->dumpSimple();
+	// __now_packet->dumpSimple();
 }
 
 void SocketIOServiceTcp::HandleWrite(const boost::system::error_code& error, std::size_t bytes_transferred)

@@ -51,6 +51,7 @@ void CServerSession::sendConnectionInfo(CServerSession* server_session, TListenI
 	// server_session의 listen_info가 this가 접속해야하는 서버라면 아이피,포트를 알려준다.
 	if (getType() == listen_info->for_type)
 	{
+		LOG_TRACE("deliver - CLocalAnnounce::connectionInfo");
 		deliver(CLocalAnnounce::connectionInfo(server_session->getType(), server_session->getId(),
 			server_session->getChannel(), listen_info->ip, listen_info->port));
 	}

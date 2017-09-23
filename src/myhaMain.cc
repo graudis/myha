@@ -14,22 +14,22 @@
 
 int main(int argc, char *argv[])
 {
-// 	castis::logger::init_logger("example", "1.0.0");
-// 	CILOG(foo) << "Just a foo";
-// 	CILOG(debug) << "A normal severity message";
-// 	CILOG(report) << "A notification severity message";
-// 	CILOG(warning) << "A warning severity message";
-// 	CILOG(info) << "A information severity message";
-// 	CILOG(error) << "A error severity message";
-// 	CILOG(fail) << "A fail severity message";
-// 	CILOG(success) << "A success severity message";
-// 	CILOG(exception) << "A exception severity message";
-// 	CILOG(critical) << "A critical severity message";
-// 
-// 	return 0;
+	// 	castis::logger::init_logger("example", "1.0.0");
+	// 	CILOG(foo) << "Just a foo";
+	// 	CILOG(debug) << "A normal severity message";
+	// 	CILOG(report) << "A notification severity message";
+	// 	CILOG(warning) << "A warning severity message";
+	// 	CILOG(info) << "A information severity message";
+	// 	CILOG(error) << "A error severity message";
+	// 	CILOG(fail) << "A fail severity message";
+	// 	CILOG(success) << "A success severity message";
+	// 	CILOG(exception) << "A exception severity message";
+	// 	CILOG(critical) << "A critical severity message";
+	// 
+	// 	return 0;
 
-	LogSystem::setSubstitutedValuef( "logfile", "myha" );
-	LogSystem::configureXml( "../cfg/log.xml" );
+	LogSystem::setSubstitutedValuef("logfile", "myha");
+	LogSystem::configureXml("../cfg/log.xml");
 
 	struct passwd* pw = getpwuid(getuid());
 	if (pw->pw_uid != 0 || pw->pw_gid != 0)
@@ -56,11 +56,11 @@ int main(int argc, char *argv[])
 
 		if (myhaMaster::config() == false)
 		{
-			printf( "[main]\t configuration error \n" );
+			printf("[main]\t configuration error \n");
 			return -1;
 		}
 
-//		system("ip addr add 192.168.122.200/32 dev eth0");
+		// system("ip addr add 192.168.122.200/32 dev eth0");
 
 		if (myhaMaster::run() == false)
 			return -1;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 		LOG_TRACE("I am Slave.");
 		if (myhaSlave::init(1) == false)
 		{
-			printf( "[main]\t configuration error \n" );
+			printf("[main]\t configuration error \n");
 			return -1;
 		}
 

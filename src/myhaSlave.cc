@@ -24,7 +24,6 @@ bool					myhaSlave::__server_init = false;
 
 void TimerClass2::operate(SocketIOService* service)
 {
-	LOG_TRACE("");
 	myhaSlave::processTimerSession((TimerSession*)service);
 }
 
@@ -61,21 +60,21 @@ bool myhaSlave::run()
 {
 	BNF::instance()->Init();
 
-	LOG_DEBUG("start service center(%d)", __group_id);
-	printf(">>>> start service center(%d)\n", __group_id);
+	LOG_DEBUG("start service myhaSlave(%d)", __group_id);
+	printf(">>>> start service myhaSlave(%d)\n", __group_id);
 
 	if (initService() == false)
 		return false;
 
-	LOG_DEBUG("DO2 CENTER SERVER ..... OK (with boost_%s)", BOOST_LIB_VERSION);
-	printf("\t\t>>>> DO2 CENTER SERVER ..... OK (with boost_%s)\n", BOOST_LIB_VERSION);
+	LOG_DEBUG("myhaSlave ...... OK (with boost_%s)", BOOST_LIB_VERSION);
+	printf("\t\t>>>> myhaSlave ...... OK (with boost_%s)\n", BOOST_LIB_VERSION);
 
 	BNF::instance()->Run();
 
 	BNF::instance()->Clear();
 
-	LOG_DEBUG("end service center(%d)", __group_id);
-	printf(">>>> end service center(%d)\n", __group_id);
+	LOG_DEBUG("end service myhaSlave(%d)", __group_id);
+	printf(">>>> end service myhaSlave(%d)\n", __group_id);
 
 	return true;
 }
@@ -120,7 +119,7 @@ void myhaSlave::processTimerSession(TimerSession* pSession)
 			if (tcp_check == true && proc_check == true)
 				status = true;
 
-			LOG_TRACE("Slave is %s.", (status == true) ? "OK" : "NOT OK");
+			// LOG_TRACE("Slave is %s.", (status == true) ? "OK" : "NOT OK");
 
 			__master_client.deliver(MonitorAnnounce::ProcessStatus(2, status));
 		}

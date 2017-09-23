@@ -11,8 +11,8 @@ public:
 
 	void operate(SocketIOService* service);
 
-	void setGroupID(int32_t group_id);
-	int32_t getGroupID() { return __group_id; }
+	void setGroupID(int16_t group_id);
+	int16_t getGroupID() { return __group_id; }
 
 	void setProcessID(int32_t process_id) { __process_id = process_id; }
 	int32_t getProcessID() { return __process_id; }
@@ -28,7 +28,7 @@ public:
 private:
 	SocketIOService* __service;
 	TServerInfo __server_session_info;
-	int32_t __group_id;
+	int16_t __group_id;
 	int32_t __process_id;
 	int32_t __login_limit;
 };

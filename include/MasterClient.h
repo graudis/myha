@@ -20,6 +20,9 @@ public:
 	bool deliver(Packet* packet);
 	bool deliver(Packet::SP packet);
 
+	void VIPDown();
+	void VIPUp();
+
 private:
 	SocketIOService* __service;
 	TServerInfo __server_session_info;

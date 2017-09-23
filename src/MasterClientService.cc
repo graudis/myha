@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "network_util.h"
+
 #include "localresponse.h"
 
 #include "myhaMaster.h"
@@ -14,15 +16,15 @@ MasterClientService::MasterClientService(SocketIOService* service) :
 
 MasterClientService::~MasterClientService()
 {
-	__service = nullptr;
+	__service = NULL;
 }
 
 void MasterClientService::operate(SocketIOService* service)
 {
-	LOG_TRACE("");
 	Packet::SP packet(service->GetMessage());
 	if (packet == NULL)
 	{
+		LOG_TRACE("getGroupID()=[ %d ]", getGroupID());
 		BNF::instance()->RemoveSession(service->GetHandle());
 		MasterClientAccept::instance()->deleteService(this);
 
@@ -30,6 +32,7 @@ void MasterClientService::operate(SocketIOService* service)
 		return;
 	}
 
+	// LOG_TRACE("packet[%3d:%3d]", packet->getGroup(), packet->getType());
 	switch (packet->getGroup())
 	{
 	case PGROUP_LOCAL_RESPONSE:
@@ -39,13 +42,22 @@ void MasterClientService::operate(SocketIOService* service)
 		case PTYPE_LOCAL_SERVER_INFO:
 		{
 			__server_session_info = *((TServerInfo*)packet->data());
-
 			LOG_TRACE("server_session_info_.id_=[ %d ]", __server_session_info.id);
+			MasterClientAccept::instance()->createService(__server_session_info.id, this);
 
-			MasterClientAccept::instance()->createService((int16_t)__server_session_info.id, this);
+			myhaMaster::requestHaveVIP();
+		}
+		break;
+		case PTYPE_LOCAL_HAVE_VIP:
+		{
+			CLocalResponse::THaveVIP slave_has_vip = *((CLocalResponse::THaveVIP*)packet->data());
+			myhaMaster::setHaveVIPSlave(slave_has_vip.have_vip);
+			LOG_TRACE("slave has VIP %d.", slave_has_vip.have_vip);
 
-			// Packet::SP sp_packet = Packet::SP ( MonitorRequest::realtimeEventUpdate( server_session_info_.id_ ) );
-			// MServerCommandManager::push_rnpacket_data( sp_packet );
+			bool master_have_vip = false;
+			master_have_vip = checkVIP(Config::INI::Instance()->getVirtualIPNIC(), Config::INI::Instance()->getVirtualIP());
+			myhaMaster::setHaveVIPMaster(master_have_vip);
+			LOG_TRACE("master has VIP %d", master_have_vip);
 		}
 		break;
 		default:
@@ -64,7 +76,7 @@ void MasterClientService::operate(SocketIOService* service)
 		{
 			MonitorResponse::TDaemonStartAlert* data = reinterpret_cast<MonitorResponse::TDaemonStartAlert*>(packet->data());
 
-			if (data->sort == SERVER_TYPE_CENTER)
+			if (data->sort == SERVER_TYPE_SLAVE)
 			{
 				MasterClientService* service = MasterClientAccept::instance()->lookup(data->group_id);
 				if (service != NULL)
@@ -93,11 +105,12 @@ void MasterClientService::operate(SocketIOService* service)
 
 			if (data->mode == 1)
 			{
-				LOG_TRACE("Master is %s.", (data->status == true) ? "OK" : "NOT OK");
+				// LOG_TRACE("Master is %s.", (data->status == true) ? "OK" : "NOT OK");
 			}
 			else if (data->mode == 2)
 			{
-				LOG_TRACE("Slave is %s.", (data->status == true) ? "OK" : "NOT OK");
+				// LOG_TRACE("Slave is %s.", (data->status == true) ? "OK" : "NOT OK");
+				myhaMaster::setSlaveOK(data->status);
 			}
 			else
 			{
@@ -125,7 +138,6 @@ bool MasterClientService::deliver(Packet* packet)
 {
 	if (__service == NULL)
 	{
-		LOG_TRACE("__service == NULL");
 		return false;
 	}
 
@@ -145,7 +157,7 @@ bool MasterClientService::deliver(Packet::SP packet)
 	return true;
 }
 
-void MasterClientService::setGroupID(int32_t group_id)
+void MasterClientService::setGroupID(int16_t group_id)
 {
 	__group_id = group_id;
 	__login_limit = 10;

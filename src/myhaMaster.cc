@@ -3,26 +3,41 @@
 #include "Config_INI.h"
 
 #include "LogSystem.h"
+#include "network_util.h"
+#include "ProcessCheck.h"
 
 #include "localrequest.h"
-#include "MasterClientService.h"
-#include "myhaMaster.h"
-#include "network_util.h"
 
-#include "ProcessCheck.h"
+#include "MasterClientService.h"
+
+
+#include "myhaMaster.h"
 
 session_handle myhaMaster::server_command_handle = SessionBase::INVALID_SESSION_HANDLE;
 TimerClass myhaMaster::timer_class;
 
+bool myhaMaster::__mysql_ok;
+bool myhaMaster::__connected;
+bool myhaMaster::__slave_ok;
+bool myhaMaster::__have_vip_master;
+bool myhaMaster::__have_vip_slave;
+UStatusChange myhaMaster::__status_old;
+UStatusChange myhaMaster::__status_cur;
+
 void TimerClass::operate(SocketIOService* service)
 {
-	LOG_TRACE("");
 	myhaMaster::processTimerSession((TimerSession*)service);
 }
 
 bool myhaMaster::config()
 {
 	return true;
+}
+
+myhaMaster::myhaMaster()
+{
+	__status_old.reset();
+	__status_cur.reset();
 }
 
 bool myhaMaster::init()
@@ -39,7 +54,13 @@ bool myhaMaster::init()
 		return false;
 	}
 
-	myhaMaster::server_command_handle = BNF::instance()->CreateTimer(1000, &timer_class);
+	server_command_handle = BNF::instance()->CreateTimer(1000, &timer_class);
+
+	setMySqlOK(false);
+	setConnected(false);
+	setSlaveOK(false);
+	setHaveVIPMaster(false);
+	setHaveVIPSlave(false);
 
 	return true;
 }
@@ -81,12 +102,166 @@ void myhaMaster::processTimerSession(TimerSession* session)
 		if (tcp_check == true && proc_check == true)
 			status = true;
 
-		LOG_TRACE("Master is %s.", (status == true) ? "OK" : "NOT OK");
-
-		MasterClientService* center = MasterClientAccept::instance()->lookup(1);
-		if (center != NULL)
+		if (status == true)
 		{
-			center->deliver(MonitorAnnounce::ProcessStatus(1, status));
+			setMySqlOK(true);
 		}
+		else
+		{
+			setMySqlOK(false);
+		}
+
+		sendStatus(status);
+
+		if (isConnected() == false)
+		{
+			printState();
+			return;
+		}
+
+		__status_cur.statusMaster(isMySqlOK());
+		__status_cur.statusSlave(isSlaveOK());
+
+		if (__status_cur.status != __status_old.status)
+		{
+			LOG_TRACE("!!! Status change !!!");
+			if (isMySqlOK() == true)
+			{
+				LOG_TRACE("");
+
+				requestVIPDown();
+				setHaveVIPSlave(false);
+				VIPUp();
+				setHaveVIPMaster(true);
+			}
+			else if (isMySqlOK() == false)
+			{
+				LOG_TRACE("");
+				if (isSlaveOK() == true)
+				{
+					requestVIPUp();
+					setHaveVIPSlave(true);
+					VIPDown();
+					setHaveVIPMaster(false);
+				}
+				else
+				{
+					requestVIPDown();
+					setHaveVIPSlave(false);
+					VIPDown();
+					setHaveVIPMaster(false);
+				}
+			}
+		}
+
+		printState();
+		__status_old = __status_cur;
 	}
+}
+
+void myhaMaster::requestHaveVIP()
+{
+	MasterClientService* slave = MasterClientAccept::instance()->lookup(1);
+	if (slave != NULL)
+	{
+		LOG_TRACE("deliver CLocalRequest::haveVIP");
+		slave->deliver(CLocalRequest::haveVIP());
+	}
+}
+
+void myhaMaster::requestVIPDown()
+{
+	MasterClientService* slave = MasterClientAccept::instance()->lookup(1);
+	if (slave != NULL)
+	{
+		LOG_TRACE("deliver CLocalRequest::requestVIPDown");
+		slave->deliver(CLocalRequest::requestVIPDown());
+	}
+}
+
+void myhaMaster::requestVIPUp()
+{
+	MasterClientService* slave = MasterClientAccept::instance()->lookup(1);
+	if (slave != NULL)
+	{
+		LOG_TRACE("deliver CLocalRequest::requestVIPUp");
+		slave->deliver(CLocalRequest::requestVIPUp());
+	}
+}
+
+void myhaMaster::VIPDown()
+{
+	std::string command;
+	command = "ip addr del " + Config::INI::Instance()->getVirtualIP() + "/24 dev " + Config::INI::Instance()->getVirtualIPNIC() + " > /dev/null 2>&1";
+	LOG_TRACE("command=[ '%s' ]", command.c_str());
+	int32_t x = system(command.c_str());
+}
+
+void myhaMaster::VIPUp()
+{
+	std::string command;
+	command = "ip addr add " + Config::INI::Instance()->getVirtualIP() + "/24 dev " + Config::INI::Instance()->getVirtualIPNIC() + " > /dev/null 2>&1";
+	LOG_TRACE("command=[ '%s' ]", command.c_str());
+	int32_t x = system(command.c_str());
+}
+
+void myhaMaster::sendStatus(bool status)
+{
+	MasterClientService* center = MasterClientAccept::instance()->lookup(1);
+	if (center != NULL)
+	{
+		center->deliver(MonitorAnnounce::ProcessStatus(1, status));
+	}
+}
+
+void myhaMaster::printState()
+{
+	std::string str;
+
+	str = "Connected : ";
+	if (isConnected() == true)
+		str += "OK    ";
+	else
+		str += "NOT OK";
+
+	str += " - Master state :: MySQL : ";
+	if (isMySqlOK() == true)
+		str += "OK    ";
+	else
+		str += "NOT OK";
+
+	str += " - Slave : ";
+	if (isSlaveOK() == true)
+		str += "OK    ";
+	else
+		str += "NOT OK";
+
+	str += " - VIP : ";
+
+	switch (HaveVIP())
+	{
+	case 0:	str += "NONE";		break;
+	case 1: str += "master";	break;
+	case 2: str += "slave";		break;
+	default: str += "!!! (" + HaveVIP() + std::string(")");
+	}
+
+	LOG_TRACE("%s", str.c_str());
+}
+
+int32_t myhaMaster::HaveVIP()
+{
+	if (haveVIPMaster() == false && haveVIPSlave() == false)
+		return 0;
+
+	if (haveVIPMaster() == true && haveVIPSlave() == false)
+		return 1;
+
+	if (haveVIPMaster() == false && haveVIPSlave() == true)
+		return 2;
+
+	if (haveVIPMaster() == true && haveVIPSlave() == true)
+		return 3;
+
+	return 4;
 }

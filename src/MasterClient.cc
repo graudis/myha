@@ -1,10 +1,13 @@
 #include "stdafx.h"
 
-#include "MasterClient.h"
-#include "myhaSlave.h"
+#include "network_util.h"
+#include "Config_INI.h"
 
 #include "localresponse.h"
 #include "monitorresponse.h"
+
+#include "MasterClient.h"
+#include "myhaSlave.h"
 
 MasterClient::MasterClient() :
 	__service(NULL)
@@ -33,7 +36,6 @@ bool MasterClient::init(SocketIOService* service, bool is_server_process_info)
 
 void MasterClient::clear()
 {
-	LOG_TRACE("");
 	if (__service)
 	{
 		LOG_DEBUG("MasterClient delete %d", __service->GetHandle());
@@ -45,19 +47,32 @@ void MasterClient::clear()
 	myhaSlave::connect_monitor_handle = BNF::instance()->CreateTimer(100, &myhaSlave::getTimerClass());
 }
 
+void MasterClient::VIPDown()
+{
+	std::string command;
+	command = "ip addr del " + Config::INI::Instance()->getVirtualIP() + "/24 dev " + Config::INI::Instance()->getVirtualIPNIC() + " > /dev/null 2>&1";
+	int32_t x = system(command.c_str());
+}
+
+void MasterClient::VIPUp()
+{
+	std::string command;
+	command = "ip addr add " + Config::INI::Instance()->getVirtualIP() + "/24 dev " + Config::INI::Instance()->getVirtualIPNIC() + " > /dev/null 2>&1";
+	int32_t x = system(command.c_str());
+}
+
 void MasterClient::operate(SocketIOService* service)
 {
-	LOG_TRACE("");
 	Packet::SP packet(service->GetMessage());
 	if (packet == NULL)
 	{
 		LOG_INFO("$$$ disconnect reason[%s] $$$", service->GetErrorMessage().c_str());
 		BNF::instance()->RemoveSession(service->GetHandle());
-		LOG_TRACE("");
 		clear();
 		return;
 	}
 
+	// LOG_TRACE("packet[%3d:%3d]", packet->getGroup(), packet->getType());
 	if (packet->getGroup() == PGROUP_MONITOR_ANNOUNCE)
 	{
 		switch (packet->getType())
@@ -89,8 +104,25 @@ void MasterClient::operate(SocketIOService* service)
 		case PTYPE_LOCAL_SERVER_INFO:
 		{
 			__server_session_info = *((TServerInfo*)packet->data());
-
-			service->deliver(CLocalResponse::serverInfo(SERVER_TYPE_CENTER, myhaSlave::getGroupID(), 0));
+			service->deliver(CLocalResponse::serverInfo(SERVER_TYPE_SLAVE, myhaSlave::getGroupID(), 0));
+		}
+		break;
+		case PTYPE_LOCAL_HAVE_VIP:
+		{
+			bool has_vip = checkVIP(Config::INI::Instance()->getVirtualIPNIC(), Config::INI::Instance()->getVirtualIP());
+			service->deliver(CLocalResponse::hasVIP(has_vip));
+		}
+		break;
+		case PTYPE_LOCAL_VIP_DOWN:
+		{
+			LOG_TRACE("VIP down");
+			VIPDown();
+		}
+		break;
+		case PTYPE_LOCAL_VIP_UP:
+		{
+			LOG_TRACE("VIP up");
+			VIPUp();
 		}
 		break;
 		}
