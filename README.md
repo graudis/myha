@@ -48,23 +48,32 @@ myHA Confiiguration file is " config.ini "
 # vi config.ini
 
 dbvip = 192.168.xxx.xxx
+
 dbvip_nic = eth0
+
 master_ip = 192.168.xxx.xxx
+
 slave_ip = 192.168.xxx.xxx
 
 
 dbvip = 192.168.xxx.xxx
+
 : DB Server service IP setting
 
 dbvip_nic = eth0
+
 : Setting the network device name used for the DB server
+
 ex) RHEL 6 / CentOS 6 = ethX , RHEL 7 / CentOS 7 = enpXXX
 
 master_ip = 192.168.xxx.xxx
+
 : Master DB server IP setting
 
 slave_ip = 192.168.xxx.xxx
+
 : Slave DB server IP setting
+
 
 Save the configuration file and exit editing
 
